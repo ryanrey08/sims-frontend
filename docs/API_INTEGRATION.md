@@ -154,3 +154,34 @@ await updateProduct({ id, body }).unwrap();                    // throws ApiErro
 3. Set `NEXT_PUBLIC_API_MODE=real` and `NEXT_PUBLIC_API_BASE_URL`, then `npm run build`.
 4. Sign in with a real account; the demo-account panel is hidden in real mode.
 5. For cookie-based sessions: remove the `Authorization` header in `prepareHeaders`, add `credentials: "include"` to `fetchBaseQuery`, and return the user from `/auth/login` without a token (store a placeholder token or adjust `authSlice`).
+
+## Config-driven modules (registries, documents, forms)
+
+These endpoints serve the modules generated from `src/config/masterData.ts`, `src/config/documents.ts` and `src/config/reportForms.ts`. The `:resource`, `:type` and `:code` values are the `key`/`code` entries in those files.
+
+### mastersApi.ts — registries
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/masters/:resource` | list params plus any field as a filter; reference fields come back with a `<field>__label` companion |
+| GET | `/masters/:resource/:id` | |
+| POST / PUT | `/masters/:resource[/:id]` | body = the config's fields; 422 for required/unique violations |
+| DELETE | `/masters/:resource/:id` | 409 when the record is referenced |
+
+Resources: `locations`, `item-classifications`, `units`, `property-classifications`, `employees`, `properties`.
+
+### documentsApi.ts — transaction documents with approval
+| Method | Path | Body |
+|---|---|---|
+| GET | `/documents/:type` | filters `status, from, to, search` → `Paginated<TransactionDocument>` |
+| GET | `/documents/summary` | `{ [type]: { total, pending } }` |
+| GET | `/documents/:type/:id` | items include `code, description, unit`; `labels` holds reference names |
+| POST / PUT | `/documents/:type[/:id]` | `{ date, fields: {…}, items: [{ refId, quantity, countedQty?, condition?, remarks? }], remarks?, submit }` |
+| POST | `/documents/:type/:id/submit` · `/approve` · `/reject` · `/cancel` | `{ remarks? }` (required for reject) |
+
+`approvals` is an ordered array of `{ role, status: waiting|pending|approved|rejected, by, at, remarks }`. The last approval posts the document and applies its effect (stock movements or property accountability changes). Types: `stock-transfers`, `stock-adjustments`, `receiving`, `issuances`, `returns`, `physical-counts`, `reconciliations`, `property-assignments`, `property-transfers`, `property-returns`, `property-disposals`.
+
+### reportFormsApi.ts — forms and monitoring
+| GET | `/reports/forms/:code` | filters `warehouseId, productId, supplierId, employeeId, propertyId, from, to` → `ReportTable` `{ title, subtitle?, meta?, columns[{key,label,format,align}], rows[], totals?, signatories? }` |
+|---|---|---|
+
+Codes: `iar, raaf, supplier-ledger, stock-card, inventory-ledger, ics, ris, rsmi, wmr, rpci, low-stock, reorder, valuation, stock-aging, movement-history, property-card, par, rpcppe, iirup, rlsddp, ptr, ppe-ledger, audit-trail`.

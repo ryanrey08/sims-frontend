@@ -19,6 +19,7 @@ import type {
 } from "@/types/models";
 import { CATEGORY_FIXTURES, CATEGORY_SUPPLIER, PEOPLE, PRODUCT_FIXTURES, SUPPLIER_FIXTURES, WAREHOUSE_FIXTURES } from "./fixtures";
 import { createRandom } from "./random";
+import { seedMastersAndDocuments } from "./seedRecords";
 import type { MockDatabase } from "./types";
 
 /** Demo accounts available in mock mode. All share this demo password. */
@@ -48,15 +49,16 @@ function rolePermissions(): Record<string, { description: string; permissions: P
         P.dashboardView, P.productsView, P.productsManage, P.suppliersView, P.suppliersManage, P.warehousesView,
         P.warehousesManage, P.inventoryView, P.inventoryAdjust, P.purchasingView, P.purchasingManage, P.purchasingApprove,
         P.requisitionsView, P.requisitionsCreate, P.requisitionsApprove, P.reportsView, P.usersView,
+        P.inventoryApprove, P.propertyView, P.propertyManage, P.propertyApprove, P.monitoringView,
       ],
     },
     "Purchasing Officer": {
       description: "Manages suppliers and purchase orders.",
-      permissions: [P.dashboardView, P.productsView, P.suppliersView, P.suppliersManage, P.warehousesView, P.inventoryView, P.purchasingView, P.purchasingManage, P.reportsView],
+      permissions: [P.dashboardView, P.productsView, P.suppliersView, P.suppliersManage, P.warehousesView, P.inventoryView, P.purchasingView, P.purchasingManage, P.reportsView, P.monitoringView],
     },
     "Warehouse Staff": {
       description: "Receives deliveries, issues supplies and adjusts stock.",
-      permissions: [P.dashboardView, P.productsView, P.warehousesView, P.inventoryView, P.inventoryAdjust, P.purchasingView, P.requisitionsView, P.requisitionsApprove],
+      permissions: [P.dashboardView, P.productsView, P.warehousesView, P.inventoryView, P.inventoryAdjust, P.purchasingView, P.requisitionsView, P.requisitionsApprove, P.propertyView, P.propertyManage],
     },
     Requester: {
       description: "Department staff who request supplies.",
@@ -389,7 +391,11 @@ export function createSeedDatabase(): MockDatabase {
     { actor: "Liza Mercado", action: "created purchase order", target: purchaseOrders[12].poNumber, module: "Purchasing", createdAt: daysAgo(7, 10).toISOString() },
   ].map((activity, index) => ({ ...activity, id: `activity-${index + 1}` }));
 
+  const { masters, documents } = seedMastersAndDocuments({ warehouses, products, suppliers, random, daysAgo, isoDate });
+
   return {
+    masters,
+    documents,
     categories,
     products,
     suppliers,

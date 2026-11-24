@@ -14,10 +14,14 @@ export function Breadcrumbs() {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0 || (segments.length === 1 && segments[0] === "dashboard")) return null;
 
-  const crumbs = segments.map((segment, index) => ({
-    href: `/${segments.slice(0, index + 1).join("/")}`,
-    label: SEGMENT_LABELS[segment] ?? labels[segment] ?? "Details",
-  }));
+  // "documents" and "masters" are route prefixes without their own page, so they are not shown.
+  const crumbs = segments
+    .map((segment, index) => ({
+      segment,
+      href: `/${segments.slice(0, index + 1).join("/")}`,
+      label: labels[segment] ?? SEGMENT_LABELS[segment] ?? "Details",
+    }))
+    .filter((crumb) => crumb.segment !== "documents" && crumb.segment !== "masters");
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4">

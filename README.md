@@ -57,21 +57,26 @@ Sign in with any demo account (mock mode only). The password for all of them is 
 
 ## Modules and routes
 
-| Area | Routes |
-|---|---|
-| Auth | `/login`, `/forgot-password`, `/reset-password?token=…` |
-| Dashboard | `/dashboard` — KPIs, movement trend, stock health, reorder alerts, value by category, recent movements and activity |
-| Products | `/products`, `/products/new`, `/products/[id]`, `/products/[id]/edit`, `/categories` |
-| Stock | `/inventory` (levels), `/inventory/movements`, `/inventory/adjust`, `/inventory/transfer` |
-| Warehouses | `/warehouses`, `/warehouses/new`, `/warehouses/[id]`, `/warehouses/[id]/edit` |
-| Suppliers | `/suppliers`, `/suppliers/new`, `/suppliers/[id]`, `/suppliers/[id]/edit` |
-| Purchase orders | `/purchase-orders`, `/purchase-orders/new`, `/purchase-orders/[id]` (submit, approve, receive, cancel, print), `/purchase-orders/[id]/edit` |
-| Requisitions | `/requisitions`, `/requisitions/new`, `/requisitions/[id]` (approve, reject, issue, cancel, print) |
-| Reports | `/reports` — inventory valuation, stock movement, purchasing; filters + CSV export |
-| Administration | `/users` (+ new/detail/edit), `/roles` (+ new/edit permission matrix), `/settings` |
-| Account | `/profile`, `/notifications` |
+The menu follows the module map of the SIMS Canva design (red/charcoal theme, white top bar, dark sidebar).
 
-Workflow rules enforced by the API (mock today, expected from the real backend): stock cannot go negative; receipts cannot exceed the outstanding PO quantity; only draft/pending POs can be edited; only approved requisitions can be issued; records with history are deactivated or discontinued instead of deleted.
+| Module | Screens |
+|---|---|
+| Dashboard | `/dashboard` — KPIs, movement trend, stock health, reorder alerts, value by category, recent activity |
+| Warehouse Management | Multiple Warehouse (`/warehouses`), Warehouse Locations (`/masters/locations`), Stock Transfer (`/documents/stock-transfers`), Stock Movement (`/inventory/movements`), Stock Management (`/inventory`), Stock Adjustment (`/documents/stock-adjustments`) |
+| Inventory Transactions | Receiving and Inspection / IAR (`/documents/receiving`), Issuance and Distribution / RIS (`/documents/issuances`), Supply Requests (`/requisitions`), Purchase Orders (`/purchase-orders`), Returns, Physical Inventory, Stock Reconciliation (`/documents/<type>`) |
+| Inventory Management | Item Master (`/products`), Item Classification, Unit of Measure (`/masters/<key>`), Item Category (`/categories`), Barcode and QR Code (`/inventory/labels`), Suppliers |
+| Property Management | Property Registration, Property Classification, Employee Accountability (`/masters/<key>`), Property Assignment (PAR/ICS), Property Transfer (PTR), Property Return, Disposal and Condemnation (IIRUP) (`/documents/<type>`) |
+| Reports | `/forms` index and `/forms/<code>`: IAR, RAAF, Supplier Ledger Card, Stock Card, Inventory Ledger, ICS, RIS, RSMI, WMR, RPCI, Property Card, PAR, RPCPPE, IIRUP, RLSDDP, PTR, PPE Ledger Card with Depreciation; plus analytics at `/reports` |
+| Monitoring | Low Stock Alerts, Reorder Level Monitoring, Inventory Valuation, Stock Aging, Inventory Movement History, Audit Trail and Activity Log, Notifications |
+| Administration | Users, Roles & Permissions (permission matrix), System Settings, My Profile |
+
+Three config files drive most of these screens, the mock API and the route permissions:
+
+- `src/config/masterData.ts` — registries (fields, validation, permissions) rendered by one list + modal-form screen.
+- `src/config/documents.ts` — transaction documents (header fields, item mode, approval chain, posting effect) rendered by one list / form / approval-detail set. Stock Transfer and Stock Adjustment use the 3-step chain Warehouse Head → Supply Officer → Property Custodian; posting happens at the final approval.
+- `src/config/reportForms.ts` — government forms and monitoring views; the API returns them as tables, the UI renders them printable with signatories and CSV export.
+
+Workflow rules enforced by the API: stock cannot go negative when a document posts; only drafts/returned documents can be edited; returning a document requires remarks; records in use cannot be deleted.
 
 ## Folder structure
 

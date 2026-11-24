@@ -13,6 +13,7 @@ import type {
   User,
   Warehouse,
 } from "@/types/models";
+import type { MasterRecord, TransactionDocument } from "@/types/records";
 
 /** Shape of the in-browser mock database. Records are stored without derived fields. */
 export interface MockDatabase {
@@ -24,6 +25,10 @@ export interface MockDatabase {
   movements: StockMovement[];
   purchaseOrders: PurchaseOrder[];
   requisitions: Requisition[];
+  /** Master-data registries keyed by MASTER_DATA key (locations, units, employees, properties…). */
+  masters: Record<string, MasterRecord[]>;
+  /** Transaction documents of every DOCUMENTS type. */
+  documents: TransactionDocument[];
   users: User[];
   roles: Role[];
   settings: SystemSettings;

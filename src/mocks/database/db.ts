@@ -6,7 +6,7 @@ import type { MockDatabase } from "./types";
 let database: MockDatabase | null = null;
 
 function isValid(value: MockDatabase | null): value is MockDatabase {
-  return Boolean(value && Array.isArray(value.products) && Array.isArray(value.movements) && value.settings);
+  return Boolean(value && Array.isArray(value.products) && Array.isArray(value.movements) && Array.isArray(value.documents) && value.masters && value.settings);
 }
 
 /** Returns the singleton mock database, loading it from localStorage or seeding it. */

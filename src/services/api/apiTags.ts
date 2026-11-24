@@ -16,6 +16,8 @@ export const API_TAGS = [
   "Notification",
   "Activity",
   "Report",
+  "Master",
+  "Document",
 ] as const;
 
 export type ApiTag = (typeof API_TAGS)[number];
