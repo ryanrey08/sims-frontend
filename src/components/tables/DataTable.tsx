@@ -83,7 +83,7 @@ export function DataTable<T>({
         <table className="w-full text-sm">
           <caption className="sr-only">{caption}</caption>
           <thead>
-            <tr className="border-b border-line bg-slate-50/80">
+            <tr className="border-b border-line bg-slate-100/80">
               {columns.map((column) => {
                 const key = column.sortKey ?? column.key;
                 const ariaSort = sortBy === key ? (sortOrder === "desc" ? "descending" : "ascending") : undefined;
@@ -92,10 +92,10 @@ export function DataTable<T>({
                     key={column.key}
                     scope="col"
                     aria-sort={column.sortable ? (ariaSort ?? "none") : undefined}
-                    className={cn("whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted", alignClass(column.align), column.className)}
+                    className={cn("whitespace-nowrap px-4 py-3 text-xs font-semibold text-slate-700", alignClass(column.align), column.className)}
                   >
                     {column.sortable && onSort ? (
-                      <button type="button" onClick={() => onSort(key)} className="inline-flex items-center gap-1 uppercase hover:text-ink">
+                      <button type="button" onClick={() => onSort(key)} className="inline-flex items-center gap-1 hover:text-ink">
                         {column.header}
                         {sortIcon(column)}
                       </button>

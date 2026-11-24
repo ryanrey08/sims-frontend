@@ -1,5 +1,6 @@
 "use client";
 
+import { Settings as SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -122,7 +123,7 @@ export function SettingsView() {
 
   return (
     <>
-      <PageHeader title="Settings" description="System-wide configuration for SIMS." />
+      <PageHeader icon={SettingsIcon} title="Settings" description="System-wide configuration for SIMS." />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <QueryBoundary {...query}>{(settings) => <SettingsForm key={settings.updatedAt} settings={settings} />}</QueryBoundary>

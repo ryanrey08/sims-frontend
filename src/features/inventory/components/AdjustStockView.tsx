@@ -1,5 +1,6 @@
 "use client";
 
+import { SlidersHorizontal as SlidersHorizontalIcon } from "lucide-react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
@@ -63,7 +64,7 @@ function AdjustStock() {
 
   return (
     <>
-      <PageHeader title="Adjust stock" description="Correct quantities after a physical count, damage or other non-transaction changes." />
+      <PageHeader icon={SlidersHorizontalIcon} title="Adjust stock" description="Correct quantities after a physical count, damage or other non-transaction changes." />
       <Card className="max-w-3xl">
         <form onSubmit={onSubmit} noValidate>
           <CardContent className="space-y-5">

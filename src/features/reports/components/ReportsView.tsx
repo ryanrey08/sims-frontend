@@ -1,5 +1,6 @@
 "use client";
 
+import { BarChart3 as BarChart3Icon } from "lucide-react";
 import { useState } from "react";
 import { Download, Printer } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -197,6 +198,7 @@ export function ReportsView() {
   return (
     <>
       <PageHeader
+        icon={BarChart3Icon}
         title="Reports"
         description="Valuation, stock movement and purchasing analytics. Export any report to CSV."
         actions={<Button variant="outline" onClick={() => window.print()} leftIcon={<Printer className="h-4 w-4" />}>Print</Button>}

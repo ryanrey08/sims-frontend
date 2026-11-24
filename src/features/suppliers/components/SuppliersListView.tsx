@@ -1,5 +1,6 @@
 "use client";
 
+import { Truck as TruckIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
@@ -72,6 +73,7 @@ export function SuppliersListView() {
   return (
     <>
       <PageHeader
+        icon={TruckIcon}
         title="Suppliers"
         description="Vendor directory, payment terms and purchasing history."
         actions={

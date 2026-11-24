@@ -1,5 +1,6 @@
 "use client";
 
+import { ShoppingCart as ShoppingCartIcon } from "lucide-react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -45,6 +46,7 @@ function PurchaseOrders() {
   return (
     <>
       <PageHeader
+        icon={ShoppingCartIcon}
         title="Purchase orders"
         description="Raise, approve and receive orders from suppliers."
         actions={

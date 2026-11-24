@@ -1,5 +1,6 @@
 "use client";
 
+import { Users as UsersIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Plus, Power, Trash2 } from "lucide-react";
@@ -86,6 +87,7 @@ export function UsersListView() {
   return (
     <>
       <PageHeader
+        icon={UsersIcon}
         title="Users"
         description="Accounts that can sign in to SIMS, with their role and department."
         actions={

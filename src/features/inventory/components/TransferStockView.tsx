@@ -1,5 +1,6 @@
 "use client";
 
+import { Truck as TruckIcon } from "lucide-react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
@@ -58,7 +59,7 @@ function TransferStock() {
 
   return (
     <>
-      <PageHeader title="Transfer stock" description="Move units between warehouses. Both sides are recorded as linked movements." />
+      <PageHeader icon={TruckIcon} title="Transfer stock" description="Move units between warehouses. Both sides are recorded as linked movements." />
       <Card className="max-w-3xl">
         <form onSubmit={onSubmit} noValidate>
           <CardContent className="space-y-5">

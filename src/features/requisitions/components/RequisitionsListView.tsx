@@ -1,5 +1,6 @@
 "use client";
 
+import { ClipboardList as ClipboardListIcon } from "lucide-react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
@@ -49,6 +50,7 @@ function Requisitions() {
   return (
     <>
       <PageHeader
+        icon={ClipboardListIcon}
         title="Requisitions"
         description="Department requests for supplies: review, approve and issue from stock."
         actions={

@@ -52,16 +52,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:shadow">
         Skip to content
       </a>
-      <Sidebar collapsed={collapsed} onToggle={() => dispatch(sidebarToggled())} />
+      <Header onToggleSidebar={() => dispatch(sidebarToggled())} onOpenMobileNav={() => dispatch(mobileNavSet(true))} />
+      <Sidebar collapsed={collapsed} />
       <MobileNav open={mobileOpen} onClose={closeMobile} />
-      <div className={cn("flex min-h-screen flex-col transition-[padding] duration-200", collapsed ? "lg:pl-20" : "lg:pl-64")}>
-        <Header onOpenMobileNav={() => dispatch(mobileNavSet(true))} />
+      <div className={cn("flex min-h-screen flex-col pt-16 transition-[padding] duration-200", collapsed ? "lg:pl-[72px]" : "lg:pl-64")}>
         <main id="main-content" className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <Breadcrumbs />
           {allowed ? children : <Unauthorized homeHref={firstAllowedPath(can)} />}
         </main>
         <footer className="border-t border-line px-6 py-4 text-center text-xs text-muted">
-          © {new Date().getFullYear()} SIMS · Supply & Inventory Management System
+          © {new Date().getFullYear()} SIMS · Supply & Inventory Management System · Powered by BlitzDev
         </footer>
       </div>
     </div>

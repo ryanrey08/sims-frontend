@@ -1,16 +1,11 @@
 import {
+  Activity,
+  ArrowLeftRight,
   BarChart3,
   Boxes,
-  ClipboardList,
   LayoutDashboard,
   type LucideIcon,
-  Package,
   Settings,
-  ShieldCheck,
-  ShoppingCart,
-  Truck,
-  UserCog,
-  Users,
   Warehouse,
 } from "lucide-react";
 import { PERMISSIONS, type Permission } from "@/constants/permissions";
@@ -28,79 +23,84 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/** Sidebar navigation. Items are hidden when the user lacks the permission. */
+/**
+ * Sidebar navigation, following the module structure of the SIMS Canva mockups.
+ * Items are hidden when the user lacks the permission.
+ */
 export const NAVIGATION: NavSection[] = [
   {
-    title: "Overview",
-    items: [{ label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: PERMISSIONS.dashboardView }],
-  },
-  {
-    title: "Inventory",
+    title: "Main",
     items: [
+      { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: PERMISSIONS.dashboardView },
       {
-        label: "Products",
+        label: "Warehouse Management",
+        href: "/warehouses",
+        icon: Warehouse,
+        permission: PERMISSIONS.warehousesView,
+        children: [
+          { label: "Multiple Warehouse", href: "/warehouses", permission: PERMISSIONS.warehousesView },
+          { label: "Stock Management", href: "/inventory", permission: PERMISSIONS.inventoryView },
+          { label: "Stock Transfer", href: "/inventory/transfer", permission: PERMISSIONS.inventoryAdjust },
+          { label: "Stock Movement", href: "/inventory/movements", permission: PERMISSIONS.inventoryView },
+          { label: "Stock Adjustment", href: "/inventory/adjust", permission: PERMISSIONS.inventoryAdjust },
+        ],
+      },
+      {
+        label: "Inventory Transactions",
+        href: "/purchase-orders",
+        icon: ArrowLeftRight,
+        permission: PERMISSIONS.purchasingView,
+        children: [
+          { label: "Purchase & Receiving", href: "/purchase-orders", permission: PERMISSIONS.purchasingView },
+          { label: "Issuance & Distribution", href: "/requisitions", permission: PERMISSIONS.requisitionsView },
+        ],
+      },
+      {
+        label: "Inventory Management",
         href: "/products",
-        icon: Package,
+        icon: Boxes,
         permission: PERMISSIONS.productsView,
         children: [
-          { label: "All products", href: "/products", permission: PERMISSIONS.productsView },
-          { label: "Categories", href: "/categories", permission: PERMISSIONS.productsView },
+          { label: "Item Master", href: "/products", permission: PERMISSIONS.productsView },
+          { label: "Item Categories", href: "/categories", permission: PERMISSIONS.productsView },
+          { label: "Suppliers", href: "/suppliers", permission: PERMISSIONS.suppliersView },
         ],
+      },
+      { label: "Reports", href: "/reports", icon: BarChart3, permission: PERMISSIONS.reportsView },
+      {
+        label: "Monitoring",
+        href: "/notifications",
+        icon: Activity,
+        children: [{ label: "Alerts & Notifications", href: "/notifications" }],
       },
       {
-        label: "Stock",
-        href: "/inventory",
-        icon: Boxes,
-        permission: PERMISSIONS.inventoryView,
+        label: "Administration",
+        href: "/users",
+        icon: Settings,
+        permission: PERMISSIONS.usersView,
         children: [
-          { label: "Stock levels", href: "/inventory", permission: PERMISSIONS.inventoryView },
-          { label: "Stock movements", href: "/inventory/movements", permission: PERMISSIONS.inventoryView },
-          { label: "Adjust stock", href: "/inventory/adjust", permission: PERMISSIONS.inventoryAdjust },
-          { label: "Transfer stock", href: "/inventory/transfer", permission: PERMISSIONS.inventoryAdjust },
+          { label: "Users", href: "/users", permission: PERMISSIONS.usersView },
+          { label: "Roles & Permissions", href: "/roles", permission: PERMISSIONS.rolesManage },
+          { label: "System Settings", href: "/settings", permission: PERMISSIONS.settingsManage },
         ],
       },
-      { label: "Warehouses", href: "/warehouses", icon: Warehouse, permission: PERMISSIONS.warehousesView },
     ],
-  },
-  {
-    title: "Procurement",
-    items: [
-      { label: "Suppliers", href: "/suppliers", icon: Truck, permission: PERMISSIONS.suppliersView },
-      { label: "Purchase orders", href: "/purchase-orders", icon: ShoppingCart, permission: PERMISSIONS.purchasingView },
-      { label: "Requisitions", href: "/requisitions", icon: ClipboardList, permission: PERMISSIONS.requisitionsView },
-    ],
-  },
-  {
-    title: "Insights",
-    items: [{ label: "Reports", href: "/reports", icon: BarChart3, permission: PERMISSIONS.reportsView }],
-  },
-  {
-    title: "Administration",
-    items: [
-      { label: "Users", href: "/users", icon: Users, permission: PERMISSIONS.usersView },
-      { label: "Roles & permissions", href: "/roles", icon: ShieldCheck, permission: PERMISSIONS.rolesManage },
-      { label: "Settings", href: "/settings", icon: Settings, permission: PERMISSIONS.settingsManage },
-    ],
-  },
-  {
-    title: "Account",
-    items: [{ label: "My profile", href: "/profile", icon: UserCog }],
   },
 ];
 
 /** Readable labels for static route segments, used by breadcrumbs. */
 export const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
-  products: "Products",
-  categories: "Categories",
-  inventory: "Stock",
+  products: "Item Master",
+  categories: "Item Categories",
+  inventory: "Stock Management",
   movements: "Stock movements",
   adjust: "Adjust stock",
   transfer: "Transfer stock",
-  warehouses: "Warehouses",
+  warehouses: "Warehouse Management",
   suppliers: "Suppliers",
-  "purchase-orders": "Purchase orders",
-  requisitions: "Requisitions",
+  "purchase-orders": "Purchase & Receiving",
+  requisitions: "Issuance & Requests",
   reports: "Reports",
   users: "Users",
   roles: "Roles & permissions",

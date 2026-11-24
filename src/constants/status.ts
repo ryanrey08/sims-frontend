@@ -26,9 +26,9 @@ export const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
   normal: { label: "Normal", tone: "info" },
   high: { label: "High", tone: "warning" },
   urgent: { label: "Urgent", tone: "danger" },
-  main: { label: "Main", tone: "brand" },
-  branch: { label: "Branch", tone: "info" },
-  storeroom: { label: "Storeroom", tone: "neutral" },
+  main: { label: "Central", tone: "info" },
+  branch: { label: "Branch", tone: "success" },
+  storeroom: { label: "Storeroom", tone: "brand" },
 };
 
 export const INBOUND_TYPES = ["receipt", "adjustment-in", "transfer-in"] as const;

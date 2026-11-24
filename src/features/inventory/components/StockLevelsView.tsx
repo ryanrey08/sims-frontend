@@ -1,5 +1,6 @@
 "use client";
 
+import { Boxes as BoxesIcon } from "lucide-react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeftRight, SlidersHorizontal } from "lucide-react";
@@ -48,6 +49,7 @@ function StockLevels() {
   return (
     <>
       <PageHeader
+        icon={BoxesIcon}
         title="Stock levels"
         description={warehouseId ? "Quantities in the selected warehouse." : "Quantities per product in every warehouse. Use the warehouse selector in the header to focus on one."}
         actions={

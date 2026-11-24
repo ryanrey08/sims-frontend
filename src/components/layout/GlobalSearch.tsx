@@ -44,7 +44,7 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative hidden w-full max-w-sm md:block">
+    <div ref={containerRef} className="relative mr-auto hidden w-full max-w-md md:block lg:ml-8">
       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
       <input
         type="search"
@@ -52,7 +52,7 @@ export function GlobalSearch() {
         aria-expanded={open && debounced.length >= 2}
         aria-controls="global-search-results"
         aria-label="Search products, suppliers and purchase orders"
-        placeholder="Search products, SKUs, suppliers, POs…"
+        placeholder="Search in SIMS (e.g., item, PO, warehouse)"
         value={term}
         onChange={(event) => {
           setTerm(event.target.value);

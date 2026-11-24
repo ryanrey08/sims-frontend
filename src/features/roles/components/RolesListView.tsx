@@ -1,5 +1,6 @@
 "use client";
 
+import { ShieldCheck as ShieldCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Lock, Plus, ShieldCheck, Trash2, Users } from "lucide-react";
@@ -25,6 +26,7 @@ export function RolesListView() {
   return (
     <>
       <PageHeader
+        icon={ShieldCheckIcon}
         title="Roles & permissions"
         description="Roles bundle permissions. Every user has exactly one role."
         actions={<ButtonLink href="/roles/new" leftIcon={<Plus className="h-4 w-4" />}>Add role</ButtonLink>}

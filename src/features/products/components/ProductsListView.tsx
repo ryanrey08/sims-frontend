@@ -1,5 +1,6 @@
 "use client";
 
+import { Package as PackageIcon } from "lucide-react";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Download, Eye, Pencil, Plus, Trash2 } from "lucide-react";
@@ -124,6 +125,7 @@ function ProductsList() {
   return (
     <>
       <PageHeader
+        icon={PackageIcon}
         title="Products"
         description="Catalog of supply items with live stock, value and reorder status."
         actions={

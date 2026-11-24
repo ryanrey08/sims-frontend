@@ -1,5 +1,6 @@
 "use client";
 
+import { Bell as BellIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CheckCheck } from "lucide-react";
@@ -31,6 +32,7 @@ export function NotificationsView() {
   return (
     <>
       <PageHeader
+        icon={BellIcon}
         title="Notifications"
         description="Alerts about stock, approvals and deliveries."
         actions={<Button variant="outline" onClick={() => markAll()} loading={markingAll} disabled={!unread} leftIcon={<CheckCheck className="h-4 w-4" />}>Mark all as read</Button>}

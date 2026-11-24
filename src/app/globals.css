@@ -10,27 +10,33 @@
 }
 
 @theme {
-  --color-brand-50: #eff4ff;
-  --color-brand-100: #dbe6fe;
-  --color-brand-200: #bfd3fe;
-  --color-brand-300: #93b4fd;
-  --color-brand-400: #608bfa;
-  --color-brand-500: #3b65f6;
-  --color-brand-600: #2547eb;
-  --color-brand-700: #1d36d8;
-  --color-brand-800: #1e2faf;
-  --color-brand-900: #1e3a8a;
-  --color-brand-950: #172554;
+  /* SIMS red (from the Canva mockups) */
+  --color-brand-50: #fef2f2;
+  --color-brand-100: #fde3e3;
+  --color-brand-200: #fbcaca;
+  --color-brand-300: #f6a3a3;
+  --color-brand-400: #ee6b6b;
+  --color-brand-500: #e04444;
+  --color-brand-600: #d32f2f;
+  --color-brand-700: #b71c1c;
+  --color-brand-800: #991b1b;
+  --color-brand-900: #7f1d1d;
+  --color-brand-950: #450a0a;
+
+  /* Charcoal sidebar */
+  --color-sidebar: #1f2328;
+  --color-sidebar-hover: #2c3138;
+  --color-sidebar-line: #383e46;
 
   --color-accent-400: #fbbf24;
   --color-accent-500: #f59e0b;
   --color-accent-600: #d97706;
 
   --color-surface: #ffffff;
-  --color-canvas: #f5f7fb;
+  --color-canvas: #f4f5f7;
   --color-line: #e3e8f0;
   --color-muted: #64748b;
-  --color-ink: #0f172a;
+  --color-ink: #1f2328;
 
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
 }

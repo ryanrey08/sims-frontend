@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRightLeft as ArrowRightLeftIcon } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -89,6 +90,7 @@ function Movements() {
   return (
     <>
       <PageHeader
+        icon={ArrowRightLeftIcon}
         title="Stock movements"
         description="Audit trail of every receipt, issue, adjustment and transfer."
         actions={<Button variant="outline" onClick={onExport} loading={exporting} leftIcon={<Download className="h-4 w-4" />}>Export CSV</Button>}

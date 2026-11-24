@@ -1,5 +1,6 @@
 "use client";
 
+import { Tags as TagsIcon } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -144,6 +145,7 @@ export function CategoriesView() {
   return (
     <>
       <PageHeader
+        icon={TagsIcon}
         title="Categories"
         description="Group products for reporting, filtering and valuation."
         actions={
