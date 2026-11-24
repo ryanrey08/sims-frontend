@@ -1,0 +1,34 @@
+import type { BadgeTone } from "@/components/ui/Badge";
+
+/** Maps every record status to a label and a badge colour. */
+export const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
+  active: { label: "Active", tone: "success" },
+  inactive: { label: "Inactive", tone: "neutral" },
+  discontinued: { label: "Discontinued", tone: "neutral" },
+  "in-stock": { label: "In stock", tone: "success" },
+  "low-stock": { label: "Low stock", tone: "warning" },
+  "out-of-stock": { label: "Out of stock", tone: "danger" },
+  draft: { label: "Draft", tone: "neutral" },
+  pending: { label: "Pending", tone: "warning" },
+  approved: { label: "Approved", tone: "info" },
+  "partially-received": { label: "Partially received", tone: "brand" },
+  received: { label: "Received", tone: "success" },
+  cancelled: { label: "Cancelled", tone: "danger" },
+  rejected: { label: "Rejected", tone: "danger" },
+  issued: { label: "Issued", tone: "success" },
+  receipt: { label: "Receipt", tone: "success" },
+  issue: { label: "Issue", tone: "warning" },
+  "adjustment-in": { label: "Adjustment +", tone: "info" },
+  "adjustment-out": { label: "Adjustment −", tone: "danger" },
+  "transfer-in": { label: "Transfer in", tone: "brand" },
+  "transfer-out": { label: "Transfer out", tone: "neutral" },
+  low: { label: "Low", tone: "neutral" },
+  normal: { label: "Normal", tone: "info" },
+  high: { label: "High", tone: "warning" },
+  urgent: { label: "Urgent", tone: "danger" },
+  main: { label: "Main", tone: "brand" },
+  branch: { label: "Branch", tone: "info" },
+  storeroom: { label: "Storeroom", tone: "neutral" },
+};
+
+export const INBOUND_TYPES = ["receipt", "adjustment-in", "transfer-in"] as const;
