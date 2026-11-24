@@ -193,7 +193,7 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
             const variance = offset === 1 ? 0 : random.int(-4, 3);
             return { refId: product.id, quantity: variance, systemQty, countedQty: systemQty + variance, unitCost: product.unitCost };
           }
-          return { refId: product.id, quantity: random.int(2, 30), unitCost: product.unitCost };
+          return { refId: product.id, quantity: random.int(1, 5), unitCost: product.unitCost };
         });
       }
 
