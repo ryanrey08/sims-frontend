@@ -4,7 +4,7 @@ import { cleanParams } from "@/lib/utils/query";
 import { baseApi } from "../baseApi";
 import { LIST_ID, provideListTags } from "../apiTags";
 
-export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt" | "categoryName" | "supplierName" | "totalStock" | "stockValue" | "stockStatus">;
+export type ProductInput = Omit<Product, "id" | "createdAt" | "updatedAt" | "categoryName" | "supplierName" | "totalStock" | "reservedStock" | "stockValue" | "stockStatus">;
 
 export const productsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

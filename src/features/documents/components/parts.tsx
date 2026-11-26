@@ -19,6 +19,9 @@ const TYPE_TONES: [RegExp, BadgeTone][] = [
   [/^spot/, "success"],
   [/^(lost|damaged|condemn)/, "danger"],
   [/^(sale|transfer|donation)/, "orange"],
+  [/^(urgent|high)/, "danger"],
+  [/^normal/, "warning"],
+  [/^low/, "success"],
 ];
 
 export function typeTone(value: string): BadgeTone {

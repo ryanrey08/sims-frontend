@@ -20,6 +20,9 @@ function locate(pathname: string): { module?: NavItem; page?: NavItem } {
   for (const item of NAVIGATION.flatMap((section) => section.items)) {
     for (const child of item.children ?? [item]) {
       if (matches(pathname, child.href) && child.href.length > best.length) best = { module: item, page: child, length: child.href.length };
+      for (const related of child.related ?? []) {
+        if (matches(pathname, related.href) && related.href.length > best.length) best = { module: item, page: { ...related }, length: related.href.length };
+      }
     }
   }
   return best;

@@ -451,7 +451,7 @@ function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocumen
                       <td className="px-2 py-2 pt-4 text-slate-500">{index + 1}</td>
                       <td className="px-2 py-2">
                         <label htmlFor={`items.${index}.refId`} className="sr-only">Item code, line {index + 1}</label>
-                        <Select id={`items.${index}.refId`} placeholder="Select" options={itemOptions} aria-invalid={lineErrors?.refId ? true : undefined} className="font-semibold text-[#2f6fd6]" {...register(`items.${index}.refId`)} />
+                        <Select key={itemOptions.length} id={`items.${index}.refId`} placeholder="Select" options={itemOptions} aria-invalid={lineErrors?.refId ? true : undefined} className="font-semibold text-[#2f6fd6]" {...register(`items.${index}.refId`)} />
                         {lineErrors?.refId && <p className="mt-1 text-xs text-red-600">{lineErrors.refId.message}</p>}
                       </td>
                       <td className="px-2 py-2 pt-4">{info.description || <span className="text-slate-400">—</span>}</td>

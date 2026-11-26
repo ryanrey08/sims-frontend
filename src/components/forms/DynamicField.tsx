@@ -64,7 +64,8 @@ export function DynamicField({
   let control: React.ReactNode;
   if (field.type === "select") {
     const options = field.optionsFrom ? referenceOptions : (field.options ?? []).map((value) => ({ label: optionLabel(value), value }));
-    control = <Select placeholder={loading ? "Loading…" : `Select ${field.label.toLowerCase()}`} options={options} disabled={readOnly} {...a11y} {...registration} />;
+    // Remount once async options arrive so React Hook Form re-applies the stored value.
+    control = <Select key={options.length} placeholder={loading ? "Loading…" : `Select ${field.label.toLowerCase()}`} options={options} disabled={readOnly} {...a11y} {...registration} />;
   } else if (field.type === "textarea") {
     control = <Textarea rows={2} placeholder={field.placeholder} {...a11y} {...registration} />;
   } else {

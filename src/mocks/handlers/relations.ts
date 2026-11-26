@@ -34,6 +34,9 @@ export function enrichProduct(product: Product, warehouseId?: string): Product {
     categoryName: db.categories.find((item) => item.id === product.categoryId)?.name ?? "—",
     supplierName: db.suppliers.find((item) => item.id === product.preferredSupplierId)?.name ?? null,
     totalStock,
+    reservedStock: db.warehouses
+      .filter((warehouse) => !warehouseId || warehouse.id === warehouseId)
+      .reduce((sum, warehouse) => sum + Math.min(productTotals(product.id, warehouse.id), reservedQuantity(product.id, warehouse.id)), 0),
     stockValue: totalStock * product.unitCost,
     stockStatus: stockStatusOf(totalStock, product.reorderLevel),
   };

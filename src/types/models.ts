@@ -55,6 +55,8 @@ export interface Product extends Timestamps {
   categoryName?: string;
   supplierName?: string | null;
   totalStock?: number;
+  /** Held by documents awaiting approval (issuances, transfers, stock-out adjustments). */
+  reservedStock?: number;
   stockValue?: number;
   stockStatus?: StockStatus;
 }

@@ -12,11 +12,19 @@ function matches(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** The most specific child whose href matches the current path. */
+/** Every path prefix that selects a menu link: the link itself plus its related screens. */
+const ALL_HREFS = NAVIGATION.flatMap((section) =>
+  section.items.flatMap((item) => [item, ...(item.children ?? [])]).flatMap((link) => [{ prefix: link.href, href: link.href }, ...(link.related ?? []).map((related) => ({ prefix: related.href, href: link.href }))]),
+);
+
+/** The most specific menu link for the current path, across the whole menu (e.g. /inventory/inquiry beats /inventory). */
+function bestHref(pathname: string) {
+  return ALL_HREFS.filter((entry) => matches(pathname, entry.prefix)).sort((a, b) => b.prefix.length - a.prefix.length)[0]?.href;
+}
+
 function activeChild(pathname: string, children: NavItem[]) {
-  return children
-    .filter((child) => matches(pathname, child.href))
-    .sort((a, b) => b.href.length - a.href.length)[0];
+  const best = bestHref(pathname);
+  return children.find((child) => child.href === best);
 }
 
 function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: boolean; onNavigate?: () => void }) {
@@ -24,7 +32,7 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
   const { can } = usePermissions();
   const children = item.children?.filter((child) => can(child.permission)) ?? [];
   const currentChild = activeChild(pathname, children);
-  const active = children.length ? Boolean(currentChild) : matches(pathname, item.href);
+  const active = children.length ? Boolean(currentChild) : bestHref(pathname) === item.href;
   const [open, setOpen] = useState(active);
   const expanded = open || active;
   const Icon = item.icon;

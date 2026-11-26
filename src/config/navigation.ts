@@ -20,6 +20,8 @@ export interface NavItem {
   icon?: LucideIcon;
   permission?: Permission;
   children?: NavItem[];
+  /** Screens opened from this page that keep it highlighted (e.g. Purchase Requests under Reorder Management). */
+  related?: { href: string; label: string }[];
 }
 
 export interface NavSection {
@@ -77,7 +79,7 @@ export const NAVIGATION: NavSection[] = [
           { label: "Inventory Management", href: "/inventory/overview", permission: P.productsView },
           { label: "Item Master", href: "/products", permission: P.productsView },
           { label: "Stock Inquiry", href: "/inventory/inquiry", permission: P.inventoryView },
-          { label: "Reorder Management", href: "/inventory/reorder", permission: P.inventoryView },
+          { label: "Reorder Management", href: "/inventory/reorder", permission: P.inventoryView, related: [{ href: "/documents/purchase-requests", label: "Purchase Request (PR)" }] },
           { label: "Barcode / QR Management", href: "/inventory/labels", permission: P.productsView },
         ],
       },

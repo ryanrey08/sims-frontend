@@ -188,6 +188,10 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
         else if (field.name === "description") fields[field.name] = def.key === "physical-counts" ? ["Monthly full count of supplies", "Cycle count – fast-moving items", "Spot check – ICT supplies"][index % 3] : "Adjustment based on the latest physical count.";
         else if (field.name.endsWith("Designation")) fields[field.name] = field.name.startsWith("requested") ? "Administrative Officer IV" : "Head, Academic Affairs";
         else if (field.name === "approvedBy") fields[field.name] = "Dr. Joemel Cunanan";
+        else if (field.name === "contactNo") fields[field.name] = `0917${String(1234567 + index * 1111).slice(0, 7)}`;
+        else if (field.name === "email") fields[field.name] = `${people[index % people.length].split(" ")[0].toLowerCase()}@agency.gov.ph`;
+        else if (field.name === "position") fields[field.name] = "Administrative Officer IV";
+        else if (field.name === "projectCode") fields[field.name] = `PRJ-2026-${String(index + 1).padStart(2, "0")}`;
         else if (field.type === "text") fields[field.name] = field.name.toLowerCase().includes("no") ? `REF-${random.int(10000, 99999)}` : people[index % people.length];
       });
 
