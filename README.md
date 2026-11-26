@@ -45,6 +45,25 @@ Sign in with any demo account (mock mode only). The password for all of them is 
 | `npm run build` | Production build |
 | `npm start` | Serve the production build |
 
+## Docker
+
+The image runs the Next.js standalone server on port 3000.
+
+```bash
+docker compose up --build
+```
+
+Then open http://localhost:3000. `NEXT_PUBLIC_*` values are baked into the browser bundle at build time, so set them before building (in a `.env` file next to `docker-compose.yml`, or as build args):
+
+```bash
+docker build -t sims-frontend \
+  --build-arg NEXT_PUBLIC_API_MODE=real \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.example.gov.ph/api .
+docker run -p 3000:3000 sims-frontend
+```
+
+`SIMS_PORT` changes the host port used by compose. Never put secrets in `NEXT_PUBLIC_` variables.
+
 ## Environment
 
 | Variable | Default | Meaning |

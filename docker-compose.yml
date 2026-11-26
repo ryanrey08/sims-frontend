@@ -1,0 +1,15 @@
+# Run the SIMS frontend in Docker:
+#   docker compose up --build
+# then open http://localhost:3000. Values below can be overridden from a .env file.
+services:
+  sims-frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_MODE: ${NEXT_PUBLIC_API_MODE:-mock}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api}
+        NEXT_PUBLIC_MOCK_DELAY_MS: ${NEXT_PUBLIC_MOCK_DELAY_MS:-400}
+    image: sims-frontend:latest
+    ports:
+      - "${SIMS_PORT:-3000}:3000"
+    restart: unless-stopped
