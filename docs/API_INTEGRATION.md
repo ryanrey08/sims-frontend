@@ -76,15 +76,16 @@ Grouped by endpoint file in `src/services/api/endpoints/`.
 | PATCH `/suppliers/:id/status` · DELETE `/suppliers/:id` (409 if it has purchase orders) |
 
 ### warehousesApi.ts
-| GET `/warehouses` (filters `status, type`) · `/warehouses/:id` — includes derived `itemCount, totalUnits, stockValue` |
+| GET `/warehouses` (filters `status, type`) · `/warehouses/:id` — includes derived `locationCount, itemCount, totalUnits, stockValue` |
 |---|
-| POST / PUT `/warehouses[/:id]` — `code, name, type (main|branch|storeroom), address, manager, phone, status` |
+| POST / PUT `/warehouses[/:id]` — `code, name, type (central|supplies|property|field), address, region, city, barangay, postalCode, manager?, phone?, status, allowTransactions, allowTransfer, allowPhysicalInventory, defaultReceiving, defaultIssuance, remarks` |
 | DELETE `/warehouses/:id` (409 if it has stock history) |
 
 ### inventoryApi.ts
 | Method | Path | Body / params |
 |---|---|---|
-| GET | `/inventory/stock` | filters `warehouseId, categoryId, productId, stockStatus` → `Paginated<StockLevel>` |
+| GET | `/inventory/stock` | filters `warehouseId, categoryId, productId, stockStatus` → `Paginated<StockLevel>`; each level includes `warehouseCode`, `reserved` (held by pending issuances, transfers and stock-out adjustments) and `available` |
+| GET | `/inventory/summary` | `warehouseId?` → `{ totalItems, totalValue, belowReorder, outOfStock, valueTrend: [{ label, value }] }` (last 6 months; Stock Management cards and chart) |
 | GET | `/inventory/movements` | filters `type, warehouseId, productId, from, to` → `Paginated<StockMovement>` |
 | GET | `/inventory/availability` | `productId, warehouseId` → `{ quantity }` |
 | POST | `/inventory/adjustments` | `{ productId, warehouseId, direction: "in"|"out", quantity, reason }` → `StockMovement` (422 if out > available) |
@@ -167,18 +168,20 @@ These endpoints serve the modules generated from `src/config/masterData.ts`, `sr
 | POST / PUT | `/masters/:resource[/:id]` | body = the config's fields; 422 for required/unique violations |
 | DELETE | `/masters/:resource/:id` | 409 when the record is referenced |
 
-Resources: `locations`, `item-classifications`, `units`, `property-classifications`, `employees`, `properties`.
+Resources: `locations`, `item-classifications`, `units`, `property-classifications`, `employees`, `properties`, `label-codes` (barcodes / QR codes), `label-templates`, `label-prints` (print history), `work-orders` (maintenance requests and work orders; `tasks`, `parts`, `activity` and `attachments` are JSON strings), `generated-reports` (report hub history).
+
+Products also accept the Item Master fields `itemType, shortDescription, subcategory, itemGroup, brand, model, accountCode, minStock, maxStock, defaultWarehouseId, unitPrice, valuationMethod, specifications, remarks, imageUrl` and return `reservedStock`.
 
 ### documentsApi.ts — transaction documents with approval
 | Method | Path | Body |
 |---|---|---|
-| GET | `/documents/:type` | filters `status, from, to, search` → `Paginated<TransactionDocument>` |
+| GET | `/documents/:type` | filters `status` (also the display statuses `completed`, `in-transit`, `in-progress`, `variance`), `from, to, search`, and any header field (e.g. `warehouseId`, `issuanceType=RIS`) → `Paginated<TransactionDocument>` |
 | GET | `/documents/summary` | `{ [type]: { total, pending } }` |
 | GET | `/documents/:type/:id` | items include `code, description, unit`; `labels` holds reference names |
-| POST / PUT | `/documents/:type[/:id]` | `{ date, fields: {…}, items: [{ refId, quantity, countedQty?, condition?, remarks? }], remarks?, submit }` |
+| POST / PUT | `/documents/:type[/:id]` | `{ date, fields: {…}, items: [{ refId, quantity, countedQty?, poQty?, receivedQty?, condition?, remarks? }], remarks?, attachments?: [{ name, size, type }], submit }` |
 | POST | `/documents/:type/:id/submit` · `/approve` · `/reject` · `/cancel` | `{ remarks? }` (required for reject) |
 
-`approvals` is an ordered array of `{ role, status: waiting|pending|approved|rejected, by, at, remarks }`. The last approval posts the document and applies its effect (stock movements or property accountability changes). Types: `stock-transfers`, `stock-adjustments`, `receiving`, `issuances`, `returns`, `physical-counts`, `reconciliations`, `property-assignments`, `property-transfers`, `property-returns`, `property-disposals`.
+`approvals` is an ordered array of `{ role, status: waiting|pending|approved|rejected, by, at, remarks }`. The last approval posts the document and applies its effect (stock movements or property accountability changes). Types: `stock-transfers`, `stock-adjustments`, `receiving` (GRN; accepted quantity is `quantity`, rejected = received − accepted), `issuances` (RIS / ICS / PAR; the number prefix follows `issuanceType`), `purchase-requests` (Department Head → Procurement → Finance), `returns`, `physical-counts` (Stock Count, prefix CNT), `reconciliations`, `property-assignments`, `property-transfers`, `property-returns`, `property-disposals`. Numbers use five digits, e.g. `ST-2026-00129`.
 
 ### reportFormsApi.ts — forms and monitoring
 | GET | `/reports/forms/:code` | filters `warehouseId, productId, supplierId, employeeId, propertyId, from, to` → `ReportTable` `{ title, subtitle?, meta?, columns[{key,label,format,align}], rows[], totals?, signatories? }` |

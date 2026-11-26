@@ -62,13 +62,13 @@ The menu follows the module map of the SIMS Canva design (red/charcoal theme, wh
 | Module | Screens |
 |---|---|
 | Dashboard | `/dashboard` — KPIs, movement trend, stock health, reorder alerts, value by category, recent activity |
-| Warehouse Management | Multiple Warehouse (`/warehouses`), Warehouse Locations (`/masters/locations`), Stock Transfer (`/documents/stock-transfers`), Stock Movement (`/inventory/movements`), Stock Management (`/inventory`), Stock Adjustment (`/documents/stock-adjustments`) |
-| Inventory Transactions | Receiving and Inspection / IAR (`/documents/receiving`), Issuance and Distribution / RIS (`/documents/issuances`), Supply Requests (`/requisitions`), Purchase Orders (`/purchase-orders`), Returns, Physical Inventory, Stock Reconciliation (`/documents/<type>`) |
-| Inventory Management | Item Master (`/products`), Item Classification, Unit of Measure (`/masters/<key>`), Item Category (`/categories`), Barcode and QR Code (`/inventory/labels`), Suppliers |
-| Property Management | Property Registration, Property Classification, Employee Accountability (`/masters/<key>`), Property Assignment (PAR/ICS), Property Transfer (PTR), Property Return, Disposal and Condemnation (IIRUP) (`/documents/<type>`) |
-| Reports | `/forms` index and `/forms/<code>`: IAR, RAAF, Supplier Ledger Card, Stock Card, Inventory Ledger, ICS, RIS, RSMI, WMR, RPCI, Property Card, PAR, RPCPPE, IIRUP, RLSDDP, PTR, PPE Ledger Card with Depreciation; plus analytics at `/reports` |
-| Monitoring | Low Stock Alerts, Reorder Level Monitoring, Inventory Valuation, Stock Aging, Inventory Movement History, Audit Trail and Activity Log, Notifications |
-| Administration | Users, Roles & Permissions (permission matrix), System Settings, My Profile |
+| Warehouse Management | Multiple Warehouse (`/warehouses`, Add/Edit modal), Warehouse Locations (`/warehouses/locations`), Stock Transfer (`/documents/stock-transfers`), Stock Movement (`/inventory/movements`), Stock Management (`/inventory`) |
+| Inventory Transactions | Receiving (GRN), Issuance (RIS/ICS/PAR), Adjustment, Return, Physical Inventory / Stock Count (3-step wizard), Stock Reconciliation (`/documents/<type>`) |
+| Inventory Management | Item Master and New Item (`/products`), Stock Inquiry (`/inventory/inquiry`), Reorder Management and Purchase Requests (`/inventory/reorder`, `/documents/purchase-requests`), Barcode / QR Management (`/inventory/labels`) |
+| Property Management | Property Management (`/property`), Property Transactions (`/property/transactions`), Property Master (`/property/master`), Maintenance and work orders (`/property/maintenance`), Disposal / Transfer (`/property/disposal`), Property / Inventory / Maintenance / Disposal report hubs (`/property/reports`) |
+| Reports | `/forms` index and `/forms/<code>` government forms (IAR, RAAF, Stock Card, RIS, RSMI, RPCI, PAR, RPCPPE, IIRUP, PTR, PPE Ledger…); analytics at `/reports` |
+| Monitoring | Low Stock Alerts, Reorder Level Monitoring, Inventory Valuation, Stock Aging, Movement History, Audit Trail, Notifications |
+| Administration | Users, Roles & Permissions, Employees / Custodians, Suppliers, Purchase Orders, Supply Requests, System Settings, My Profile |
 
 Three config files drive most of these screens, the mock API and the route permissions:
 
@@ -139,7 +139,9 @@ If the backend wraps responses (e.g. `{ data: … }`) or uses cookie sessions in
 
 ## Design reference and assumptions
 
-- The Canva link requires a Canva sign-in, so the design could not be inspected, and no logo file was provided. The UI uses a consistent enterprise style (navy primary, amber accent, Inter). Colours live in `src/app/globals.css` (`--color-brand-*`, `--color-accent-*`) and the logo in `public/logo/logo.svg` (plus `src/app/icon.svg` for the favicon), so the Canva palette and real logo can be dropped in without touching components.
-- The module list follows a standard supply & inventory workflow; adjust `config/navigation.ts` if the Canva design differs.
+- The UI follows the 88-screen SIMS Canva mockup (https://www.canva.com/design/DAHazTVmi3k). `design/CANVA_NOTES.md` records what each screen contains and `design/GAP_ANALYSIS.md` tracks what was matched and what still differs.
+- Theme: red `#d32f2f` primary with a charcoal sidebar; colours live in `src/app/globals.css` and the logo in `public/logo/logo.svg`.
+- Screens with no mockup (login, dashboard, administration, suppliers, purchase orders, supply requests) use the same shared components so they match the rest of the app.
+- To run a second dev server next to your own (for example for automated screenshots) without clashing over `.next`, set `NEXT_DIST_DIR`, e.g. `NEXT_DIST_DIR=.next-claude npx next dev -p 3101`.
 - Authentication assumes a bearer token returned by `POST /auth/login`; switch to cookies in `baseQuery.ts` if needed.
 - Route protection is client-side; the backend must still enforce permissions.
