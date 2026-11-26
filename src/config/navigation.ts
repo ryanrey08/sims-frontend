@@ -90,10 +90,10 @@ export const NAVIGATION: NavSection[] = [
         permission: P.propertyView,
         children: [
           { label: "Property Management", href: "/property", permission: P.propertyView },
-          { label: "Property Transactions", href: "/property/transactions", permission: P.propertyView },
+          { label: "Property Transactions", href: "/property/transactions", permission: P.propertyView, related: [{ href: "/documents/property-assignments", label: "Property Issuance" }, { href: "/documents/property-returns", label: "Property Return" }] },
           { label: "Property Master", href: "/property/master", permission: P.propertyView },
           { label: "Maintenance", href: "/property/maintenance", permission: P.propertyView },
-          { label: "Disposal / Transfer", href: "/property/disposal", permission: P.propertyView },
+          { label: "Disposal / Transfer", href: "/property/disposal", permission: P.propertyView, related: [{ href: "/documents/property-transfers", label: "Property Transfer" }, { href: "/documents/property-disposals", label: "Property Disposal" }] },
           { label: "Property Reports", href: "/property/reports", permission: P.reportsView },
         ],
       },

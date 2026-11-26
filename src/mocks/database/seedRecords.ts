@@ -115,34 +115,51 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
     }),
   );
 
-  const propertyTemplates: [string, number, number][] = [
-    ["Desktop Computer, Core i7, 16GB RAM", 0, 58500],
-    ["Laptop Computer, Core i5, 8GB RAM", 0, 52000],
-    ["Multifunction Printer, A3", 1, 38900],
-    ["Air Conditioner, Split Type 2.0HP", 1, 45500],
-    ["Executive Table, Wooden", 2, 18500],
-    ["Steel Filing Cabinet, 4-Drawer", 2, 12800],
-    ["Network Switch, 24-Port Managed", 0, 32000],
-    ["Projector, 4000 Lumens", 1, 41000],
-    ["Service Vehicle, Pick-up 4x2", 3, 1385000],
-    ["Generator Set, 10kVA", 4, 265000],
+  const propertyTemplates: [string, number, number, string, string, string][] = [
+    ["Desktop Computer, Core i7, 16GB RAM", 0, 58500, "ICT Equipment", "Dell", "OptiPlex 7010"],
+    ["Laptop Computer, Core i5, 8GB RAM", 0, 52000, "ICT Equipment", "Lenovo", "ThinkPad E14"],
+    ["Multifunction Printer, A3", 1, 38900, "Office Equipment", "Epson", "L15160"],
+    ["Air Conditioner, Split Type 2.0HP", 1, 45500, "Building Facilities", "Carrier", "Optima 2HP"],
+    ["Executive Table, Wooden", 2, 18500, "Furniture & Fixtures", "Uratex", "EX-1800"],
+    ["Steel Filing Cabinet, 4-Drawer", 2, 12800, "Furniture & Fixtures", "Steelcase", "FC-4D"],
+    ["Network Switch, 24-Port Managed", 0, 32000, "ICT Equipment", "Cisco", "CBS250-24T"],
+    ["Projector, 4000 Lumens", 1, 41000, "Office Equipment", "Epson", "EB-X51"],
+    ["Service Vehicle, Pick-up 4x2", 3, 1385000, "Motor Vehicles", "Toyota", "Hilux 2.4 J"],
+    ["Generator Set, 10kVA", 4, 265000, "Machinery & Equipment", "Denyo", "DCA-10"],
+    ["CCTV Camera System, 8-Channel", 0, 68000, "Security Equipment", "Hikvision", "DS-7208"],
   ];
   const properties: MasterRecord[] = [];
   for (let index = 0; index < 24; index += 1) {
-    const [description, classIndex, cost] = propertyTemplates[index % propertyTemplates.length];
+    const [description, classIndex, cost, category, brand, model] = propertyTemplates[index % propertyTemplates.length];
     const acquired = daysAgo(random.int(200, 1900));
-    const status = index === 21 ? "for-disposal" : index === 22 ? "disposed" : index === 23 ? "lost" : index % 5 === 4 ? "available" : "assigned";
+    const status = index === 21 ? "for-disposal" : index === 22 ? "disposed" : index === 23 ? "lost" : index % 9 === 8 ? "for-maintenance" : index % 5 === 4 ? "available" : "assigned";
+    const employee = employees[index % employees.length];
     properties.push(
       record(`prop-${index + 1}`, {
-        propertyNo: `${cost >= 50000 ? "PPE" : "SE"}-${acquired.getFullYear()}-${String(index + 1).padStart(4, "0")}`,
+        propertyNo: `PROP-${String(index + 1).padStart(6, "0")}`,
         description,
+        category,
+        propertyType: category === "Motor Vehicles" ? "Vehicle" : category === "Furniture & Fixtures" ? "Furniture" : "Equipment",
         classificationId: propertyClassifications[classIndex].id,
         serialNo: `SN${random.int(100000, 999999)}`,
+        brand,
+        model,
+        assetTag: `AT-${String(1000 + index)}`,
+        uom: "unit",
         acquisitionDate: isoDate(acquired),
         acquisitionCost: cost,
-        accountableId: status === "assigned" ? employees[index % employees.length].id : null,
+        supplierName: suppliers[index % suppliers.length].name,
+        poNo: `PO-${acquired.getFullYear()}-${String(200 + index).padStart(4, "0")}`,
+        fundingSource: "GAA",
+        warrantyUntil: isoDate(new Date(acquired.getTime() + 3 * 365 * 86400000)),
+        accountableId: status === "assigned" || status === "for-maintenance" ? employee.id : null,
+        department: employee.office as string,
         locationId: locations[index % locations.length].id,
-        condition: status === "for-disposal" || status === "disposed" ? "Unserviceable" : index % 9 === 8 ? "For Repair" : "Serviceable",
+        condition: status === "for-disposal" || status === "disposed" ? "Unserviceable" : status === "for-maintenance" ? "For Repair" : "Serviceable",
+        depreciationMethod: "Straight-Line",
+        usefulLife: Number(propertyClassifications[classIndex].usefulLife ?? 5),
+        salvageValue: Math.round(cost * 0.1),
+        remarks: "",
         status,
       }),
     );
@@ -171,6 +188,58 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
     const at = daysAgo(1 + index * 4, 9 + (index % 6));
     return record(`lpr-${index + 1}`, { reference: `LBL-2026-${String(120 - index).padStart(5, "0")}`, labelType: ["Barcode & QR Code", "Barcode Only", "QR Code Only"][index % 3], template: labelTemplates[index % 3].name as string, items: 1 + (index % 5) * 2, labels: (1 + (index % 5) * 2) * (1 + (index % 2)), printedBy: people[index % people.length], printedAt: at.toISOString() });
   });
+
+  // Maintenance -------------------------------------------------------------------------
+  const woStatuses = ["in-progress", "scheduled", "pending", "completed", "completed", "in-progress", "completed", "scheduled", "pending", "completed", "completed", "in-progress"];
+  const issues = ["Unit does not power on", "Annual preventive maintenance", "Paper jam and streaks on prints", "Not cooling properly", "Change oil and tune-up", "Battery replacement", "Firmware update and cleaning", "Loose drawer rails"];
+  const workOrders = woStatuses.map((status, index) => {
+    const property = properties[(index * 3) % 20];
+    const requested = daysAgo(3 + index * 4);
+    const type = index % 3 === 1 ? "Preventive" : index % 7 === 6 ? "Emergency" : index % 4 === 3 ? "Scheduled" : "Corrective";
+    const tasks = [
+      { task: "Inspect and diagnose", assignedTo: "Paolo Ramos", estimatedHours: 2, actualHours: status === "pending" ? 0 : 2, status: status === "pending" ? "Pending" : "Completed" },
+      { task: "Repair / replace parts", assignedTo: "Paolo Ramos", estimatedHours: 3, actualHours: status === "completed" ? 3 : 1, status: status === "completed" ? "Completed" : status === "pending" ? "Pending" : "In Progress" },
+      { task: "Test and turn over", assignedTo: "Joy Navarro", estimatedHours: 1, actualHours: status === "completed" ? 1 : 0, status: status === "completed" ? "Completed" : "Pending" },
+    ];
+    const parts = [{ itemCode: "ITM-00021", description: "LAN Cable Cat6 (305m box)", unit: "box", quantity: 1, unitCost: 1200, source: "Main Warehouse", status: status === "pending" ? "Requested" : "Issued" }];
+    return record(`wo-${index + 1}`, {
+      requestNo: `MR-2026-${String(130 + index).padStart(6, "0")}`,
+      woNo: status === "pending" ? null : `WO-2026-${String(20 + index).padStart(4, "0")}`,
+      requestDate: isoDate(requested),
+      propertyId: property.id,
+      type,
+      priority: ["High", "Medium", "Low"][index % 3],
+      issue: issues[index % issues.length],
+      details: `${issues[index % issues.length]} reported by the custodian.`,
+      requestedBy: people[index % people.length],
+      department: ["ICT Office", "Administration", "Finance", "Facilities"][index % 4],
+      routeTo: "ICT Head",
+      assignedTo: status === "pending" ? null : ["IT Support Team", "Facilities Team", "Motor Pool"][index % 3],
+      technician: status === "pending" ? null : "Paolo Ramos",
+      startDate: status === "pending" ? null : isoDate(new Date(requested.getTime() + 86400000)),
+      targetDate: isoDate(new Date(requested.getTime() + (index % 2 ? 7 : 14) * 86400000)),
+      completedDate: status === "completed" ? isoDate(new Date(requested.getTime() + 5 * 86400000)) : null,
+      completionRemarks: status === "completed" ? "Work completed and tested. Unit returned to the custodian." : null,
+      laborCost: 1500 + index * 100,
+      partsCost: 1200,
+      otherCost: index % 3 === 0 ? 500 : 0,
+      tasks: JSON.stringify(tasks),
+      parts: JSON.stringify(parts),
+      activity: JSON.stringify([
+        { at: requested.toISOString(), type: "Created", details: "Maintenance request created", by: people[index % people.length], remarks: "" },
+        ...(status !== "pending" ? [{ at: new Date(requested.getTime() + 86400000).toISOString(), type: "Assigned", details: "Work order assigned to the technician", by: "Mark Soriano", remarks: "" }] : []),
+        ...(status === "completed" ? [{ at: new Date(requested.getTime() + 5 * 86400000).toISOString(), type: "Status Update", details: "Marked as completed", by: "Paolo Ramos", remarks: "" }] : []),
+      ]),
+      status,
+    });
+  });
+  const generatedReports = [
+    ["Property Master List", "property", "property-master-list", "As of Oct 31, 2026 · All Categories"],
+    ["Property by Location", "property", "property-by-location", "As of Oct 31, 2026 · All Locations"],
+    ["Item Master List", "inventory", "item-master-list", "As of Oct 31, 2026"],
+    ["Work Order Summary", "maintenance", "work-order-summary", "Oct 1 – Oct 31, 2026"],
+    ["Disposal Value Summary", "disposal", "disposal-value-summary", "Jan 1 – Oct 31, 2026"],
+  ].map(([name, hub, reportKey, parameters], index) => record(`rpt-${index + 1}`, { name, hub, reportKey, parameters, generatedBy: people[index % people.length], generatedAt: daysAgo(index + 1, 14).toISOString() }));
 
   // Documents -----------------------------------------------------------------------
   const documents: TransactionDocument[] = [];
@@ -270,6 +339,8 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
       "label-codes": labelCodes,
       "label-templates": labelTemplates,
       "label-prints": labelPrints,
+      "work-orders": workOrders,
+      "generated-reports": generatedReports,
     },
     documents,
   };
