@@ -101,8 +101,21 @@ export interface StockLevel {
   unitCost?: number;
   reorderLevel?: number;
   warehouseName?: string;
+  warehouseCode?: string;
+  /** Quantity held by pending issuances, transfers and stock-out adjustments. */
+  reserved?: number;
+  available?: number;
   value?: number;
   stockStatus?: StockStatus;
+}
+
+/** Stock Management summary cards and the "Stock Value Trend (Last 6 Months)" chart. */
+export interface StockSummary {
+  totalItems: number;
+  totalValue: number;
+  belowReorder: number;
+  outOfStock: number;
+  valueTrend: ChartPoint[];
 }
 
 export type MovementType = "receipt" | "issue" | "adjustment-in" | "adjustment-out" | "transfer-in" | "transfer-out";

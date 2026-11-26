@@ -16,9 +16,9 @@ export const PRODUCT_STATUS_OPTIONS: SelectOption[] = [
   { label: "Discontinued", value: "discontinued" },
 ];
 export const STOCK_STATUS_OPTIONS: SelectOption[] = [
-  { label: "In stock", value: "in-stock" },
-  { label: "Low stock", value: "low-stock" },
-  { label: "Out of stock", value: "out-of-stock" },
+  { label: "Sufficient", value: "in-stock" },
+  { label: "Below Reorder", value: "low-stock" },
+  { label: "Out of Stock", value: "out-of-stock" },
 ];
 export const WAREHOUSE_TYPE_OPTIONS: SelectOption[] = [
   { label: "Central", value: "central" },

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getDocumentDef } from "@/config/documents";
@@ -11,5 +12,9 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 export default async function Page({ params }: { params: Promise<{ type: string; id: string }> }) {
   const { type, id } = await params;
   if (!getDocumentDef(type)) notFound();
-  return <DocumentFormView type={type} id={id} />;
+  return (
+    <Suspense>
+      <DocumentFormView type={type} id={id} />
+    </Suspense>
+  );
 }

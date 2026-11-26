@@ -20,6 +20,33 @@ let transferCounter = 100;
 export const inventoryRoutes: MockRoute[] = [
   {
     method: "GET",
+    pattern: "/inventory/summary",
+    handler: ({ query }) => {
+      const db = getDb();
+      const levels = applyFilters(db.stockLevels, query, ["warehouseId"]).map(enrichStockLevel);
+      const cost = new Map(db.products.map((product) => [product.id, product.unitCost]));
+      const totalValue = levels.reduce((sum, level) => sum + (level.value ?? 0), 0);
+      // Walk back month by month: value at the end of a month = current value minus later net movements.
+      const now = new Date();
+      const valueTrend = Array.from({ length: 6 }, (_, back) => {
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() - back + 1, 1);
+        const later = db.movements
+          .filter((movement) => (!query.warehouseId || movement.warehouseId === query.warehouseId) && new Date(movement.createdAt) >= monthEnd)
+          .reduce((sum, movement) => sum + (["receipt", "adjustment-in", "transfer-in"].includes(movement.type) ? 1 : -1) * movement.quantity * (cost.get(movement.productId) ?? 0), 0);
+        const label = new Date(now.getFullYear(), now.getMonth() - back, 1).toLocaleString("en-US", { month: "short" });
+        return { label, value: Math.max(0, Math.round(totalValue - later)) };
+      }).reverse();
+      return {
+        totalItems: levels.reduce((sum, level) => sum + level.quantity, 0),
+        totalValue,
+        belowReorder: levels.filter((level) => level.stockStatus === "low-stock").length,
+        outOfStock: levels.filter((level) => level.stockStatus === "out-of-stock").length,
+        valueTrend,
+      };
+    },
+  },
+  {
+    method: "GET",
     pattern: "/inventory/stock",
     handler: ({ query }) => {
       const db = getDb();

@@ -1,5 +1,5 @@
 import type { ListParams, Paginated } from "@/types/api";
-import type { StockLevel, StockMovement } from "@/types/models";
+import type { StockLevel, StockMovement, StockSummary } from "@/types/models";
 import { cleanParams } from "@/lib/utils/query";
 import { baseApi } from "../baseApi";
 
@@ -28,6 +28,10 @@ export const inventoryApi = baseApi.injectEndpoints({
       query: (params) => ({ url: "/inventory/stock", params: cleanParams(params) }),
       providesTags: ["Stock"],
     }),
+    getStockSummary: build.query<StockSummary, { warehouseId?: string }>({
+      query: (params) => ({ url: "/inventory/summary", params: cleanParams(params) }),
+      providesTags: ["Stock"],
+    }),
     getMovements: build.query<Paginated<StockMovement>, ListParams>({
       query: (params) => ({ url: "/inventory/movements", params: cleanParams(params) }),
       providesTags: ["Movement"],
@@ -49,6 +53,7 @@ export const inventoryApi = baseApi.injectEndpoints({
 
 export const {
   useGetStockLevelsQuery,
+  useGetStockSummaryQuery,
   useGetMovementsQuery,
   useLazyGetMovementsQuery,
   useGetAvailabilityQuery,

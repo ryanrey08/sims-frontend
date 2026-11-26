@@ -34,11 +34,11 @@ export function StatCard({
 }) {
   const tint = accents[(ALIASES[accent] ?? accent) as StatAccent];
   return (
-    <Card className={cn("flex min-h-[88px] items-center gap-4 px-5 py-4 shadow-none", tint.card)}>
-      <Icon className={cn("h-10 w-10 shrink-0", tint.icon)} strokeWidth={1.5} />
+    <Card className={cn("@container flex min-h-[88px] items-center gap-3 px-4 py-4 shadow-none", tint.card)}>
+      <Icon className={cn("h-9 w-9 shrink-0 @[200px]:h-10 @[200px]:w-10", tint.icon)} strokeWidth={1.5} />
       <div className="min-w-0">
         <p className="text-[13px] font-medium text-ink">{label}</p>
-        {loading ? <Skeleton className="mt-1.5 h-7 w-20" /> : <p className="mt-0.5 truncate text-2xl font-bold leading-tight text-ink">{value}</p>}
+        {loading ? <Skeleton className="mt-1.5 h-7 w-20" /> : <p className="mt-0.5 whitespace-nowrap text-lg font-bold leading-tight text-ink @[230px]:text-2xl">{value}</p>}
         {hint && !loading && <p className="mt-0.5 text-xs text-muted">{hint}</p>}
       </div>
     </Card>

@@ -375,8 +375,8 @@ export const DOCUMENTS: DocumentDef[] = [
       cards: [
         { label: "Total Stock Count", icon: FileText, accent: "blue" },
         { label: "Completed", icon: CheckCircle2, accent: "green", statuses: ["completed", "posted"] },
-        { label: "In Progress", icon: Hourglass, accent: "yellow", statuses: ["draft", "pending"] },
-        { label: "Variance", icon: TriangleAlert, accent: "pink", statuses: ["rejected"] },
+        { label: "In Progress", icon: Hourglass, accent: "yellow", statuses: ["draft", "in-progress"] },
+        { label: "Variance", icon: TriangleAlert, accent: "pink", statuses: ["variance"] },
         { label: "This Month", icon: CalendarDays, accent: "purple", thisMonth: true },
       ],
       listColumns: [
@@ -592,9 +592,11 @@ export function getDocumentDef(key: string) {
  * Status shown in lists and badges. Transfers that have cleared at least one approval
  * are "In Transit"; posted transfers and counts read "Completed".
  */
-export function displayStatus(def: DocumentDef, doc: { status: string; approvals: { status: string }[] }) {
+export function displayStatus(def: DocumentDef, doc: { status: string; approvals: { status: string }[]; items?: { quantity: number }[] }) {
   if (doc.status === "posted") return def.ui.postedLabel ?? "posted";
   if (def.key === "stock-transfers" && doc.status === "pending" && doc.approvals.some((step) => step.status === "approved")) return "in-transit";
+  // Stock counts awaiting approval read "Variance" when any line differs from the system quantity.
+  if (def.key === "physical-counts" && doc.status === "pending") return doc.items?.some((item) => item.quantity !== 0) ? "variance" : "in-progress";
   return doc.status;
 }
 

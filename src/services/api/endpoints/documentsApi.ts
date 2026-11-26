@@ -36,7 +36,7 @@ export const documentsApi = baseApi.injectEndpoints({
     }),
     saveDocument: build.mutation<TransactionDocument, { type: string; id?: string; body: DocumentInput }>({
       query: ({ type, id, body }) => ({ url: id ? `/documents/${type}/${id}` : `/documents/${type}`, method: id ? "PUT" : "POST", body }),
-      invalidatesTags: ["Document", "Activity"],
+      invalidatesTags: ["Document", "Activity", "Stock"],
     }),
     documentAction: build.mutation<TransactionDocument, { type: string; id: string; action: "submit" | "approve" | "reject" | "cancel"; remarks?: string }>({
       query: ({ type, id, action, remarks }) => ({ url: `/documents/${type}/${id}/${action}`, method: "POST", body: { remarks } }),

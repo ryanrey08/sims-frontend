@@ -65,11 +65,29 @@ export function enrichWarehouse(warehouse: Warehouse): Warehouse {
   };
 }
 
+/** Quantity of a product held by documents still awaiting approval in a warehouse. */
+export function reservedQuantity(productId: string, warehouseId: string) {
+  return getDb()
+    .documents.filter((doc) => doc.status === "pending")
+    .filter(
+      (doc) =>
+        (doc.type === "issuances" && doc.fields.warehouseId === warehouseId) ||
+        (doc.type === "stock-transfers" && doc.fields.fromWarehouseId === warehouseId) ||
+        (doc.type === "stock-adjustments" && doc.fields.warehouseId === warehouseId && String(doc.fields.adjustmentType).startsWith("Stock Out")),
+    )
+    .reduce((sum, doc) => sum + doc.items.filter((item) => item.refId === productId).reduce((total, item) => total + Math.abs(item.quantity), 0), 0);
+}
+
 export function enrichStockLevel(level: StockLevel): StockLevel {
   const db = getDb();
   const product = db.products.find((item) => item.id === level.productId);
+  const warehouse = db.warehouses.find((item) => item.id === level.warehouseId);
+  const reserved = Math.min(level.quantity, reservedQuantity(level.productId, level.warehouseId));
   return {
     ...level,
+    warehouseCode: warehouse?.code,
+    reserved,
+    available: level.quantity - reserved,
     sku: product?.sku,
     productName: product?.name ?? "Unknown product",
     categoryName: db.categories.find((item) => item.id === product?.categoryId)?.name,
