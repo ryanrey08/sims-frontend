@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { LabelsView } from "@/features/inventory/components/LabelsView";
+import { BarcodeManagementView } from "@/features/labels/components/BarcodeManagementView";
 
-export const metadata: Metadata = { title: "Barcode and QR Code" };
+export const metadata: Metadata = { title: "Barcode / QR Management" };
 
 export default function Page() {
-  return <LabelsView />;
+  return <BarcodeManagementView />;
 }

@@ -67,3 +67,22 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Printing (labels, forms): only the page content prints, without the app chrome. */
+@media print {
+  header,
+  aside,
+  nav[aria-label="Breadcrumb"] {
+    display: none !important;
+  }
+  #main-content {
+    padding: 0 !important;
+  }
+  #main-content ~ *,
+  .print-hidden {
+    display: none !important;
+  }
+  div:has(> #main-content) {
+    padding: 0 !important;
+  }
+}

@@ -148,6 +148,30 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
     );
   }
 
+  const people = ["Juan Dela Cruz", "Maria Santos", "Mark Soriano", "Liza Mercado", "Joy Navarro"];
+
+  // Barcode / QR labels ---------------------------------------------------------------
+  const labelCodes: MasterRecord[] = [];
+  products.forEach((product, index) => {
+    const generatedAt = isoDate(daysAgo(10 + (index % 40)));
+    if (index % 10 !== 9) labelCodes.push(record(`lbc-${labelCodes.length + 1}`, { code: `BC-${String(5600 + index * 3).padStart(8, "0")}`, codeType: "Barcode", productId: product.id, generatedBy: "Liza Mercado", generatedAt, printCount: 1 + (index % 4), status: index % 17 === 5 ? "inactive" : "active" }));
+    if (index % 5 !== 4) labelCodes.push(record(`lbc-${labelCodes.length + 1}`, { code: `QR-${String(3400 + index * 3).padStart(8, "0")}`, codeType: "QR Code", productId: product.id, generatedBy: "Liza Mercado", generatedAt, printCount: 1 + (index % 3), status: index % 19 === 7 ? "inactive" : "active" }));
+  });
+  const labelTemplates = [
+    ["Item Label (Barcode + QR)", "Item Label", "100 mm x 50 mm", true, true, true, true],
+    ["Inventory Label (Barcode)", "Inventory Label", "80 mm x 50 mm", true, true, true, false],
+    ["Asset Label (QR)", "Asset Label", "50 mm x 25 mm", false, true, false, true],
+    ["Shelf / Location Label", "Location Label", "100 mm x 30 mm", false, true, true, false],
+    ["Property Tag (Barcode + QR)", "Property Tag", "60 mm x 40 mm", true, true, true, true],
+    ["Small Item Label", "Item Label", "40 mm x 25 mm", false, false, true, false],
+  ].map(([name, category, labelSize, showLogo, showDetails, showBarcode, showQr], index) =>
+    record(`ltp-${index + 1}`, { name: name as string, category: category as string, labelSize: labelSize as string, orientation: "Landscape", showLogo: showLogo as boolean, showDetails: showDetails as boolean, showBarcode: showBarcode as boolean, showQr: showQr as boolean, status: "active" }),
+  );
+  const labelPrints = Array.from({ length: 8 }, (_, index) => {
+    const at = daysAgo(1 + index * 4, 9 + (index % 6));
+    return record(`lpr-${index + 1}`, { reference: `LBL-2026-${String(120 - index).padStart(5, "0")}`, labelType: ["Barcode & QR Code", "Barcode Only", "QR Code Only"][index % 3], template: labelTemplates[index % 3].name as string, items: 1 + (index % 5) * 2, labels: (1 + (index % 5) * 2) * (1 + (index % 2)), printedBy: people[index % people.length], printedAt: at.toISOString() });
+  });
+
   // Documents -----------------------------------------------------------------------
   const documents: TransactionDocument[] = [];
   const statuses: { status: DocumentStatus; approved: number; rejected?: boolean }[] = [
@@ -160,7 +184,6 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
     { status: "rejected", approved: 1, rejected: true },
   ];
   const active = products.filter((product) => product.status === "active");
-  const people = ["Juan Dela Cruz", "Maria Santos", "Mark Soriano", "Liza Mercado", "Joy Navarro"];
 
   DOCUMENTS.forEach((def) => {
     const count = def.module === "property" ? 4 : 12;
@@ -244,6 +267,9 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
       "property-classifications": propertyClassifications,
       employees,
       properties,
+      "label-codes": labelCodes,
+      "label-templates": labelTemplates,
+      "label-prints": labelPrints,
     },
     documents,
   };
