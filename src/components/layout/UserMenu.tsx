@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronDown, LogOut, Settings, UserCog } from "lucide-react";
-import { Avatar } from "@/components/ui/Avatar";
+import { ChevronDown, LogOut, Settings, UserCog, UserRound } from "lucide-react";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { PERMISSIONS } from "@/constants/permissions";
 import { usePermissions } from "@/hooks/usePermission";
@@ -20,13 +19,12 @@ export function UserMenu() {
   return (
     <Dropdown
       trigger={(props) => (
-        <button type="button" {...props} className="flex items-center gap-2 rounded-lg p-1 pr-2 hover:bg-slate-100" aria-label="Account menu">
-          <Avatar name={user.name} size="sm" />
-          <span className="hidden text-left leading-tight sm:block">
-            <span className="block text-sm font-semibold text-ink">{user.name}</span>
-            <span className="block text-xs text-muted">{user.roleName}</span>
+        <button type="button" {...props} className="flex items-center gap-2 rounded-full p-1 pr-2 hover:bg-slate-100" aria-label="Account menu">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-600" aria-hidden>
+            <UserRound className="h-5 w-5" />
           </span>
-          <ChevronDown className="hidden h-4 w-4 text-slate-400 sm:block" aria-hidden />
+          <span className="hidden text-[13px] font-semibold text-ink sm:block">{user.name.split(" ")[0]}</span>
+          <ChevronDown className="hidden h-4 w-4 text-ink sm:block" aria-hidden />
         </button>
       )}
     >

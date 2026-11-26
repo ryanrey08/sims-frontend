@@ -108,7 +108,7 @@ export function WarehousesListView() {
         <StatCard label="Total Warehouses" value={warehouses.length} icon={Building2} loading={!all} />
         <StatCard label="Active Warehouses" value={warehouses.filter((item) => item.status === "active").length} icon={WarehouseIcon} accent="emerald" loading={!all} />
         <StatCard label="Total Stock Value" value={formatCurrency(warehouses.reduce((sum, item) => sum + (item.stockValue ?? 0), 0))} icon={Coins} accent="amber" loading={!all} />
-        <StatCard label="Total Stock Items" value={formatNumber(warehouses.reduce((sum, item) => sum + (item.totalUnits ?? 0), 0))} icon={Boxes} accent="sky" loading={!all} />
+        <StatCard label="Total Stock Items" value={formatNumber(warehouses.reduce((sum, item) => sum + (item.totalUnits ?? 0), 0))} icon={Boxes} accent="purple" loading={!all} />
       </div>
       <Card>
         <TableToolbar showReset={list.hasActiveFilters} onReset={list.resetFilters}>

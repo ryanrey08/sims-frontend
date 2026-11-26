@@ -29,8 +29,8 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
   const expanded = open || active;
   const Icon = item.icon;
   const base = cn(
-    "group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-    active ? "bg-brand-600 text-white" : "text-slate-300 hover:bg-sidebar-hover hover:text-white",
+    "group flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-[13.5px] font-medium transition-colors",
+    active ? "bg-brand-600 text-white" : "text-slate-100 hover:bg-sidebar-hover hover:text-white",
     collapsed && "justify-center px-2",
   );
 
@@ -53,11 +53,11 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
                     onClick={onNavigate}
                     aria-current={childActive ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-[13px] transition-colors",
-                      childActive ? "bg-brand-600/90 font-semibold text-white" : "text-slate-400 hover:bg-sidebar-hover hover:text-white",
+                      "flex items-center gap-2.5 rounded-md px-3 py-[7px] text-[13px] transition-colors",
+                      childActive ? "bg-brand-600 font-semibold text-white" : "text-slate-200 hover:bg-sidebar-hover hover:text-white",
                     )}
                   >
-                    <span className={cn("h-1.5 w-1.5 rounded-full", childActive ? "bg-white" : "bg-slate-500")} aria-hidden />
+                    <span className="h-1 w-1 rounded-full bg-current" aria-hidden />
                     {child.label}
                   </Link>
                 </li>
@@ -105,7 +105,6 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
       )}
     >
       <SidebarNav collapsed={collapsed} />
-      <p className={cn("border-t border-sidebar-line px-4 py-3 text-[11px] text-slate-500", collapsed && "sr-only")}>SIMS v1.0 · © {new Date().getFullYear()}</p>
     </aside>
   );
 }

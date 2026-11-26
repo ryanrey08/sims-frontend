@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "success";
 export type ButtonSize = "sm" | "md" | "lg" | "icon";
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -11,11 +11,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   outline: "border border-line bg-white text-ink hover:bg-slate-50 active:bg-slate-100",
   ghost: "text-slate-600 hover:bg-slate-100 hover:text-ink active:bg-slate-200",
   danger: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm",
+  success: "bg-[#1f9d55] text-white hover:bg-[#188247] active:bg-[#136b3a] shadow-sm",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-xs gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
+  md: "h-9 px-4 text-[13px] gap-2",
   lg: "h-11 px-5 text-sm gap-2",
   icon: "h-9 w-9 justify-center",
 };
@@ -23,7 +24,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 /** Shared class builder so links can look like buttons. */
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
   return cn(
-    "inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition-colors",
+    "inline-flex shrink-0 items-center justify-center rounded-md font-semibold transition-colors",
     "disabled:pointer-events-none disabled:opacity-50",
     variantClasses[variant],
     sizeClasses[size],

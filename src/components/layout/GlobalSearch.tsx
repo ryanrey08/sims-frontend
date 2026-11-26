@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePermissions } from "@/hooks/usePermission";
@@ -10,8 +10,17 @@ import { useLazyGlobalSearchQuery } from "@/services/api/endpoints/dashboardApi"
 import { Spinner } from "@/components/ui/Skeleton";
 
 /** Header search across products, suppliers and purchase orders (lazy RTK Query). */
+/** Placeholder text per module, as shown in the mockups. */
+function searchPlaceholder(pathname: string) {
+  if (pathname.startsWith("/documents/receiving") || pathname.startsWith("/documents/issuances")) return "Search in SIMS (e.g., Item, PO, PR, transaction no.)";
+  if (pathname.startsWith("/products") || pathname.startsWith("/inventory/inquiry") || pathname.startsWith("/inventory/reorder") || pathname.startsWith("/inventory/labels")) return "Search in SIMS (e.g., Item code, description, PO, RIS/CS/PAR)";
+  if (pathname.startsWith("/masters/properties") || pathname.startsWith("/property")) return "Search in SIMS (e.g., property no., description, serial no., location)";
+  return "Search in SIMS (e.g., item, PO, warehouse)";
+}
+
 export function GlobalSearch() {
   const router = useRouter();
+  const pathname = usePathname();
   const { can } = usePermissions();
   const [term, setTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -44,15 +53,15 @@ export function GlobalSearch() {
   };
 
   return (
-    <div ref={containerRef} className="relative mr-auto hidden w-full max-w-md md:block lg:ml-8">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+    <div ref={containerRef} className="relative hidden w-72 md:block xl:w-80">
+      <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink" aria-hidden />
       <input
         type="search"
         role="combobox"
         aria-expanded={open && debounced.length >= 2}
         aria-controls="global-search-results"
         aria-label="Search products, suppliers and purchase orders"
-        placeholder="Search in SIMS (e.g., item, PO, warehouse)"
+        placeholder={searchPlaceholder(pathname)}
         value={term}
         onChange={(event) => {
           setTerm(event.target.value);
@@ -60,7 +69,7 @@ export function GlobalSearch() {
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={(event) => event.key === "Escape" && setOpen(false)}
-        className="h-10 w-full rounded-lg border border-line bg-slate-50 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        className="h-9 w-full rounded-md border border-slate-300 bg-white pl-3 pr-9 text-[13px] placeholder:text-slate-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 [&::-webkit-search-cancel-button]:hidden"
       />
       {open && debounced.length >= 2 && (
         <div id="global-search-results" className="absolute z-40 mt-2 w-full rounded-xl border border-line bg-white p-2 shadow-lg">

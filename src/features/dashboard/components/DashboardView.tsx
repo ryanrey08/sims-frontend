@@ -53,7 +53,7 @@ export function DashboardView() {
         <StatCard label="Inventory value" value={formatCurrency(totals?.inventoryValue ?? 0, true)} hint={`${formatNumber(totals?.totalUnits ?? 0)} units · ${totals?.products ?? 0} products`} icon={Wallet} loading={isLoading} />
         <StatCard label="Low stock" value={totals?.lowStock ?? 0} hint="At or below reorder level" icon={AlertTriangle} accent="amber" loading={isLoading} />
         <StatCard label="Out of stock" value={totals?.outOfStock ?? 0} hint="Needs replenishment now" icon={PackageX} accent="rose" loading={isLoading} />
-        <StatCard label="Pending approvals" value={(totals?.pendingPurchaseOrders ?? 0) + (totals?.pendingRequisitions ?? 0)} hint={`${totals?.pendingPurchaseOrders ?? 0} POs · ${totals?.pendingRequisitions ?? 0} requisitions`} icon={ShoppingCart} accent="sky" loading={isLoading} />
+        <StatCard label="Pending approvals" value={(totals?.pendingPurchaseOrders ?? 0) + (totals?.pendingRequisitions ?? 0)} hint={`${totals?.pendingPurchaseOrders ?? 0} POs · ${totals?.pendingRequisitions ?? 0} requisitions`} icon={ShoppingCart} accent="purple" loading={isLoading} />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-3">

@@ -30,12 +30,10 @@ export interface NavSection {
 const P = PERMISSIONS;
 const doc = (key: string, label: string, permission: Permission): NavItem => ({ label, href: `/documents/${key}`, permission });
 const form = (code: string, label: string, permission: Permission = P.reportsView): NavItem => ({ label, href: `/forms/${code}`, permission });
-const master = (key: string, label: string, permission: Permission): NavItem => ({ label, href: `/masters/${key}`, permission });
 
 /**
- * Sidebar navigation, following the module map of the SIMS Canva design (page 2):
- * Warehouse Management, Inventory Transactions, Inventory Management, Property Management,
- * Reports, Monitoring and Administration. Items are hidden when the user lacks the permission.
+ * Sidebar navigation, matching the menu tree drawn in the SIMS Canva mockups.
+ * Items are hidden when the user lacks the permission.
  */
 export const NAVIGATION: NavSection[] = [
   {
@@ -49,55 +47,52 @@ export const NAVIGATION: NavSection[] = [
         permission: P.warehousesView,
         children: [
           { label: "Multiple Warehouse", href: "/warehouses", permission: P.warehousesView },
-          master("locations", "Warehouse Locations", P.warehousesView),
+          { label: "Warehouse Locations", href: "/warehouses/locations", permission: P.warehousesView },
           doc("stock-transfers", "Stock Transfer", P.inventoryView),
           { label: "Stock Movement", href: "/inventory/movements", permission: P.inventoryView },
           { label: "Stock Management", href: "/inventory", permission: P.inventoryView },
-          doc("stock-adjustments", "Stock Adjustment", P.inventoryView),
         ],
       },
       {
         label: "Inventory Transactions",
-        href: "/documents/receiving",
+        href: "/transactions",
         icon: ArrowLeftRight,
         permission: P.inventoryView,
         children: [
-          doc("receiving", "Receiving and Inspection", P.inventoryView),
-          doc("issuances", "Issuance and Distribution", P.requisitionsView),
-          { label: "Supply Requests", href: "/requisitions", permission: P.requisitionsView },
-          { label: "Purchase Orders", href: "/purchase-orders", permission: P.purchasingView },
-          doc("returns", "Returns", P.inventoryView),
+          { label: "Inventory Transaction", href: "/transactions", permission: P.inventoryView },
+          doc("receiving", "Receiving (GRN)", P.inventoryView),
+          doc("issuances", "Issuance (RIS/ICS/PAR)", P.requisitionsView),
+          doc("stock-adjustments", "Adjustment", P.inventoryView),
+          doc("returns", "Return", P.inventoryView),
           doc("physical-counts", "Physical Inventory", P.inventoryView),
           doc("reconciliations", "Stock Reconciliation", P.inventoryView),
         ],
       },
       {
         label: "Inventory Management",
-        href: "/products",
+        href: "/inventory/overview",
         icon: Boxes,
         permission: P.productsView,
         children: [
+          { label: "Inventory Management", href: "/inventory/overview", permission: P.productsView },
           { label: "Item Master", href: "/products", permission: P.productsView },
-          master("item-classifications", "Item Classification", P.productsView),
-          master("units", "Unit of Measure", P.productsView),
-          { label: "Item Category", href: "/categories", permission: P.productsView },
-          { label: "Barcode and QR Code", href: "/inventory/labels", permission: P.productsView },
-          { label: "Suppliers", href: "/suppliers", permission: P.suppliersView },
+          { label: "Stock Inquiry", href: "/inventory/inquiry", permission: P.inventoryView },
+          { label: "Reorder Management", href: "/inventory/reorder", permission: P.inventoryView },
+          { label: "Barcode / QR Management", href: "/inventory/labels", permission: P.productsView },
         ],
       },
       {
         label: "Property Management",
-        href: "/masters/properties",
+        href: "/property",
         icon: Landmark,
         permission: P.propertyView,
         children: [
-          master("properties", "Property Registration", P.propertyView),
-          master("property-classifications", "Property Classification", P.propertyView),
-          doc("property-assignments", "Property Assignment", P.propertyView),
-          master("employees", "Employee Accountability", P.propertyView),
-          doc("property-transfers", "Property Transfer", P.propertyView),
-          doc("property-returns", "Property Return", P.propertyView),
-          doc("property-disposals", "Disposal and Condemnation", P.propertyView),
+          { label: "Property Management", href: "/property", permission: P.propertyView },
+          { label: "Property Transactions", href: "/property/transactions", permission: P.propertyView },
+          { label: "Property Master", href: "/property/master", permission: P.propertyView },
+          { label: "Maintenance", href: "/property/maintenance", permission: P.propertyView },
+          { label: "Disposal / Transfer", href: "/property/disposal", permission: P.propertyView },
+          { label: "Property Reports", href: "/property/reports", permission: P.reportsView },
         ],
       },
       {
@@ -106,13 +101,8 @@ export const NAVIGATION: NavSection[] = [
         icon: FileSpreadsheet,
         permission: P.reportsView,
         children: [
-          { label: "All Forms and Reports", href: "/forms", permission: P.reportsView },
+          { label: "Forms and Reports", href: "/forms", permission: P.reportsView },
           { label: "Report Generation", href: "/reports", permission: P.reportsView },
-          form("stock-card", "Stock Card"),
-          form("rpci", "RPCI"),
-          form("rsmi", "RSMI"),
-          form("par", "PAR"),
-          form("ppe-ledger", "PPE Ledger Card"),
         ],
       },
       {
@@ -138,6 +128,10 @@ export const NAVIGATION: NavSection[] = [
         children: [
           { label: "Users", href: "/users", permission: P.usersView },
           { label: "Roles & Permissions", href: "/roles", permission: P.rolesManage },
+          { label: "Employees / Custodians", href: "/masters/employees", permission: P.propertyView },
+          { label: "Suppliers", href: "/suppliers", permission: P.suppliersView },
+          { label: "Purchase Orders", href: "/purchase-orders", permission: P.purchasingView },
+          { label: "Supply Requests", href: "/requisitions", permission: P.requisitionsView },
           { label: "System Settings", href: "/settings", permission: P.settingsManage },
         ],
       },
@@ -149,8 +143,18 @@ export const NAVIGATION: NavSection[] = [
 export const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
   products: "Item Master",
+  "purchase-requests": "Purchase Request (PR)",
   categories: "Item Categories",
   inventory: "Stock Management",
+  transactions: "Inventory Transactions",
+  overview: "Inventory Management",
+  inquiry: "Stock Inquiry",
+  reorder: "Reorder Management",
+  property: "Property Management",
+  master: "Property Master",
+  maintenance: "Maintenance",
+  disposal: "Disposal / Transfer",
+  locations: "Warehouse Locations",
   movements: "Stock movements",
   adjust: "Adjust stock",
   transfer: "Transfer stock",
@@ -167,7 +171,7 @@ export const SEGMENT_LABELS: Record<string, string> = {
   documents: "Transactions",
   masters: "Registries",
   forms: "Forms and Reports",
-  labels: "Barcode and QR Code",
+  labels: "Barcode / QR Management",
   new: "New",
   edit: "Edit",
 };
@@ -184,7 +188,13 @@ const ROUTE_RULES: { pattern: RegExp; permission: Permission }[] = [
   { pattern: /^\/inventory\/labels/, permission: PERMISSIONS.productsView },
   { pattern: /^\/forms/, permission: PERMISSIONS.reportsView },
   { pattern: /^\/inventory/, permission: PERMISSIONS.inventoryView },
+  { pattern: /^\/warehouses\/locations/, permission: PERMISSIONS.warehousesView },
   { pattern: /^\/warehouses\/(new|[^/]+\/edit)/, permission: PERMISSIONS.warehousesManage },
+  { pattern: /^\/transactions/, permission: PERMISSIONS.inventoryView },
+  { pattern: /^\/inventory\/(inquiry|reorder)/, permission: PERMISSIONS.inventoryView },
+  { pattern: /^\/inventory\/overview/, permission: PERMISSIONS.productsView },
+  { pattern: /^\/property\/reports/, permission: PERMISSIONS.reportsView },
+  { pattern: /^\/property/, permission: PERMISSIONS.propertyView },
   { pattern: /^\/warehouses/, permission: PERMISSIONS.warehousesView },
   { pattern: /^\/suppliers\/(new|[^/]+\/edit)/, permission: PERMISSIONS.suppliersManage },
   { pattern: /^\/suppliers/, permission: PERMISSIONS.suppliersView },

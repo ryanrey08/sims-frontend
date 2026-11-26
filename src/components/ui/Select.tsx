@@ -20,7 +20,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
 ) {
   return (
     <div className="relative">
-      <select ref={ref} className={cn(fieldClasses, "h-10 appearance-none pr-9", className)} {...props}>
+      <select ref={ref} className={cn(fieldClasses, "h-9 appearance-none pr-8", className)} {...props}>
         {placeholder !== undefined && <option value="">{placeholder}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -28,7 +28,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink" aria-hidden />
     </div>
   );
 });

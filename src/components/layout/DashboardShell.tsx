@@ -56,13 +56,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <Sidebar collapsed={collapsed} />
       <MobileNav open={mobileOpen} onClose={closeMobile} />
       <div className={cn("flex min-h-screen flex-col pt-16 transition-[padding] duration-200", collapsed ? "lg:pl-[72px]" : "lg:pl-64")}>
-        <main id="main-content" className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main-content" className="w-full flex-1 px-4 py-4 sm:px-6">
           <Breadcrumbs />
           {allowed ? children : <Unauthorized homeHref={firstAllowedPath(can)} />}
         </main>
-        <footer className="border-t border-line px-6 py-4 text-center text-xs text-muted">
-          © {new Date().getFullYear()} SIMS · Supply & Inventory Management System · Powered by BlitzDev
-        </footer>
       </div>
     </div>
   );

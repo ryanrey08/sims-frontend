@@ -29,15 +29,11 @@ export function NotificationsMenu() {
         <button
           type="button"
           {...props}
-          className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-ink"
+          className="relative rounded-full p-1.5 text-ink hover:bg-slate-100"
           aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
         >
-          <Bell className="h-5 w-5" />
-          {unread > 0 && (
-            <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-              {unread}
-            </span>
-          )}
+          <Bell className="h-6 w-6" strokeWidth={1.8} />
+          {unread > 0 && <span className="absolute right-1.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-brand-600" aria-hidden />}
         </button>
       )}
     >

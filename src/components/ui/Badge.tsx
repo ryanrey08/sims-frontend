@@ -1,14 +1,17 @@
 import { cn } from "@/lib/utils/cn";
 
-export type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "brand";
+export type BadgeTone = "neutral" | "success" | "warning" | "danger" | "info" | "brand" | "purple" | "orange";
 
+/** Pill colours used across the SIMS mockups (soft background, darker text, rounded-md). */
 const tones: Record<BadgeTone, string> = {
-  neutral: "bg-slate-100 text-slate-700 ring-slate-200",
-  success: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  warning: "bg-amber-50 text-amber-800 ring-amber-200",
-  danger: "bg-red-50 text-red-700 ring-red-200",
-  info: "bg-sky-50 text-sky-700 ring-sky-200",
-  brand: "bg-brand-50 text-brand-900 ring-brand-200",
+  neutral: "bg-slate-100 text-slate-700",
+  success: "bg-[#e3f5e9] text-[#1e8a46]",
+  warning: "bg-[#fdf1d8] text-[#a66a00]",
+  danger: "bg-[#fde4e4] text-[#c62828]",
+  info: "bg-[#e3eefd] text-[#1d5fc4]",
+  brand: "bg-brand-50 text-brand-700",
+  purple: "bg-[#efe8fd] text-[#6d3fc4]",
+  orange: "bg-[#fdeedd] text-[#c25a00]",
 };
 
 export function Badge({
@@ -23,13 +26,7 @@ export function Badge({
   children: React.ReactNode;
 }) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
-        tones[tone],
-        className,
-      )}
-    >
+    <span className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold", tones[tone], className)}>
       {dot && <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden />}
       {children}
     </span>

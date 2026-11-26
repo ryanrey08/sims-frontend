@@ -155,7 +155,7 @@ function PurchasingReport({ filters }: { filters: ReportFilters }) {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <StatCard label="Committed spend" value={formatCurrency(data?.totalSpend ?? 0)} hint="Excludes drafts and cancelled orders" icon={Receipt} loading={isLoading} />
-        <StatCard label="Purchase orders" value={data?.orderCount ?? 0} icon={ShoppingCart} accent="sky" loading={isLoading} />
+        <StatCard label="Purchase orders" value={data?.orderCount ?? 0} icon={ShoppingCart} accent="purple" loading={isLoading} />
       </div>
       <div className="grid gap-6 xl:grid-cols-2">
         <Card><CardHeader title="Spend by supplier" /><CardContent><ChartBlock loading={!data}>{data && <BarChartView data={data.bySupplier} series={[{ key: "value", label: "Spend (₱)" }]} layout="vertical" height={300} />}</ChartBlock></CardContent></Card>
