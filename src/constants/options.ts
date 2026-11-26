@@ -21,10 +21,22 @@ export const STOCK_STATUS_OPTIONS: SelectOption[] = [
   { label: "Out of stock", value: "out-of-stock" },
 ];
 export const WAREHOUSE_TYPE_OPTIONS: SelectOption[] = [
-  { label: "Main warehouse", value: "main" },
-  { label: "Branch warehouse", value: "branch" },
-  { label: "Storeroom", value: "storeroom" },
+  { label: "Central", value: "central" },
+  { label: "Supplies", value: "supplies" },
+  { label: "Property", value: "property" },
+  { label: "Field", value: "field" },
 ];
+
+/** Category pill colours used in the mockups. */
+export function categoryTone(name: string | undefined) {
+  const value = (name ?? "").toLowerCase();
+  if (value.includes("ict equipment") || value.includes("building")) return "success" as const;
+  if (value.includes("ict") || value.includes("audio")) return "purple" as const;
+  if (value.includes("janitorial") || value.includes("furniture")) return "warning" as const;
+  if (value.includes("medical") || value.includes("security")) return "danger" as const;
+  if (value.includes("motor") || value.includes("pantry")) return "orange" as const;
+  return "info" as const;
+}
 export const MOVEMENT_TYPE_OPTIONS: SelectOption[] = [
   { label: "Receipt", value: "receipt" },
   { label: "Issue", value: "issue" },

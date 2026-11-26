@@ -2,12 +2,12 @@
 export const CATEGORY_FIXTURES = [
   { code: "OFF", name: "Office Supplies", description: "Pens, paper, folders and everyday desk supplies." },
   { code: "PAP", name: "Paper Products", description: "Bond paper, specialty paper and printed forms." },
-  { code: "ITE", name: "IT Equipment & Accessories", description: "Peripherals, cables, storage media and accessories." },
-  { code: "CLN", name: "Cleaning & Janitorial", description: "Cleaning chemicals, tools and sanitation supplies." },
+  { code: "ITE", name: "ICT Equipment", description: "Computers, peripherals, cables and storage media." },
+  { code: "CLN", name: "Janitorial Supplies", description: "Cleaning chemicals, tools and sanitation supplies." },
   { code: "PPE", name: "Safety & PPE", description: "Personal protective equipment and safety gear." },
-  { code: "PNT", name: "Printer Consumables", description: "Toner, ink cartridges and drums." },
+  { code: "PNT", name: "ICT Supplies", description: "Toner, ink cartridges, drums and other ICT consumables." },
   { code: "PAN", name: "Pantry Supplies", description: "Coffee, water, cups and kitchen consumables." },
-  { code: "MED", name: "First Aid & Medical", description: "First aid kits, medicines and medical consumables." },
+  { code: "MED", name: "Medical Supplies", description: "First aid kits, medicines and medical consumables." },
 ];
 
 /** [categoryCode, name, unit, unitCost, reorderLevel, reorderQty] */
@@ -70,10 +70,10 @@ export const SUPPLIER_FIXTURES = [
 export const CATEGORY_SUPPLIER: Record<string, number> = { OFF: 0, PAP: 1, ITE: 2, CLN: 3, PPE: 4, PNT: 5, PAN: 6, MED: 7 };
 
 export const WAREHOUSE_FIXTURES = [
-  { code: "WH-MAIN", name: "Central Warehouse", type: "main", address: "Km. 18 East Service Rd., Parañaque City", manager: "Roberto Aquino" },
-  { code: "WH-NOR", name: "North Branch Warehouse", type: "branch", address: "123 Quirino Hwy., Quezon City", manager: "Melanie Ramos" },
-  { code: "WH-SOU", name: "South Branch Warehouse", type: "branch", address: "45 National Rd., Muntinlupa City", manager: "Dennis Flores" },
-  { code: "SR-HQ", name: "Head Office Storeroom", type: "storeroom", address: "8F Ayala Tower, Makati City", manager: "Joy Navarro" },
+  { code: "WH-MAIN", name: "Main Warehouse", type: "central", address: "MPC Main Campus, Sta. Elena, Marikina City", manager: "Roberto Aquino", barangay: "Sta. Elena", postalCode: "1800" },
+  { code: "WH-SUP", name: "Supplies Warehouse", type: "supplies", address: "Bldg. B, Supply Depot, Marikina City", manager: "Melanie Ramos", barangay: "Sta. Elena", postalCode: "1800" },
+  { code: "WH-PROP", name: "Property Warehouse", type: "property", address: "Bldg. C, Property Storage, Marikina City", manager: "Dennis Flores", barangay: "Concepcion Uno", postalCode: "1807" },
+  { code: "WH-FIELD", name: "Field / Satellite Warehouse", type: "field", address: "MPC Annex, Industrial Area, Marikina City", manager: "Joy Navarro", barangay: "Fortune", postalCode: "1810" },
 ] as const;
 
 export const PEOPLE = ["Andrea Villanueva", "Roberto Aquino", "Liza Mercado", "Mark Soriano", "Joy Navarro", "Paolo Ramos", "Grace Tan"];

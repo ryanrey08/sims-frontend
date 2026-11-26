@@ -3,5 +3,5 @@ export const STORAGE_KEYS = {
   session: "sims.session",
   uiPreferences: "sims.ui",
   appContext: "sims.context",
-  mockDatabase: "sims.inventory.mockdb.v4",
+  mockDatabase: "sims.inventory.mockdb.v6",
 } as const;

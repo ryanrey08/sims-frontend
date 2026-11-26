@@ -296,7 +296,7 @@ export const catalogRoutes: MockRoute[] = [
     handler: (request) => {
       requirePermission(request, PERMISSIONS.warehousesManage);
       const body = bodyOf<Partial<Warehouse>>(request);
-      requireFields(body as Record<string, unknown>, ["code", "name", "type", "address", "manager"]);
+      requireFields(body as Record<string, unknown>, ["code", "name", "type", "address"]);
       const db = getDb();
       assertUnique(db.warehouses, "code", body.code, undefined, "This warehouse code already exists.");
       const warehouse = { phone: "", ...body, id: newId("warehouse"), status: body.status ?? "active", ...stamp() } as Warehouse;

@@ -4,7 +4,7 @@ import { cleanParams } from "@/lib/utils/query";
 import { baseApi } from "../baseApi";
 import { LIST_ID, provideListTags } from "../apiTags";
 
-export type WarehouseInput = Omit<Warehouse, "id" | "createdAt" | "updatedAt" | "itemCount" | "totalUnits" | "stockValue">;
+export type WarehouseInput = Omit<Warehouse, "id" | "createdAt" | "updatedAt" | "itemCount" | "totalUnits" | "stockValue" | "locationCount">;
 
 export const warehousesApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

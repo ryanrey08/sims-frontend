@@ -58,6 +58,7 @@ export function enrichWarehouse(warehouse: Warehouse): Warehouse {
   const cost = new Map(db.products.map((product) => [product.id, product.unitCost]));
   return {
     ...warehouse,
+    locationCount: (db.masters.locations ?? []).filter((location) => location.warehouseId === warehouse.id).length,
     itemCount: levels.length,
     totalUnits: levels.reduce((sum, level) => sum + level.quantity, 0),
     stockValue: levels.reduce((sum, level) => sum + level.quantity * (cost.get(level.productId) ?? 0), 0),

@@ -132,8 +132,16 @@ export function createSeedDatabase(): MockDatabase {
   const warehouses: Warehouse[] = WAREHOUSE_FIXTURES.map((fixture, index) => ({
     id: `warehouse-${index + 1}`,
     ...fixture,
+    region: "NCR – National Capital Region",
+    city: "Marikina City",
     phone: `(02) 8${random.int(100, 999)} ${random.int(1000, 9999)}`,
     status: "active",
+    allowTransactions: true,
+    allowTransfer: true,
+    allowPhysicalInventory: true,
+    defaultReceiving: index === 0,
+    defaultIssuance: index === 1,
+    remarks: index === 1 ? "Secondary warehouse for supplies and materials." : "",
     createdAt: created,
     updatedAt: created,
   }));
@@ -142,7 +150,7 @@ export function createSeedDatabase(): MockDatabase {
     const category = categoryByCode.get(code)!;
     return {
       id: `product-${index + 1}`,
-      sku: `${code}-${String(index + 1).padStart(4, "0")}`,
+      sku: `ITM-${String(index + 1).padStart(5, "0")}`,
       name,
       description: `${name} for general ${category.name.toLowerCase()} use.`,
       categoryId: category.id,

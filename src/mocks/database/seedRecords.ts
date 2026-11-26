@@ -37,7 +37,7 @@ export function buildApprovals(steps: string[], approved: number, at: string, re
 export function seedMastersAndDocuments({ warehouses, products, suppliers, random, daysAgo, isoDate }: SeedContext) {
   const created = daysAgo(120).toISOString();
   const stamp = { createdAt: created, updatedAt: created };
-  const record = (id: string, fields: Record<string, string | number | null>): MasterRecord => ({ id, ...fields, ...stamp });
+  const record = (id: string, fields: Record<string, string | number | boolean | null>): MasterRecord => ({ id, ...fields, ...stamp });
 
   const locations: MasterRecord[] = [];
   warehouses.forEach((warehouse, warehouseIndex) => {
@@ -54,8 +54,15 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
           zone: index === 0 ? "RCV" : String.fromCharCode(65 + (index % 2)),
           rack: index === 0 ? "" : rack,
           bin: type === "Bin" ? `B${index}` : "",
-          capacity: index === 0 ? 0 : [500, 1000, 1500][index % 3],
+          capacity: index === 0 ? 2000 : [500, 1000, 500][index % 3],
+          uom: "pcs",
           description: `${type} storage at ${warehouse.name}`,
+          allowReceiving: true,
+          allowIssuance: index !== 0,
+          allowTransfer: true,
+          allowPhysicalInventory: true,
+          defaultReceiving: index === 0,
+          defaultIssuance: index === 1,
           status: index === 5 ? "inactive" : "active",
         }),
       );

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { WarehouseForm } from "@/features/warehouses/components/WarehouseForm";
+import { WarehousesListView } from "@/features/warehouses/components/WarehousesListView";
 
-export const metadata: Metadata = { title: "New warehouse" };
+export const metadata: Metadata = { title: "Add warehouse" };
 
 export default function Page() {
-  return <WarehouseForm />;
+  return <WarehousesListView initialForm="new" />;
 }

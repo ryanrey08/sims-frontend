@@ -63,12 +63,23 @@ export interface Warehouse extends Timestamps {
   id: ID;
   code: string;
   name: string;
-  type: "main" | "branch" | "storeroom";
+  type: "central" | "supplies" | "property" | "field";
   address: string;
+  region?: string;
+  city?: string;
+  barangay?: string;
+  postalCode?: string;
   manager: string;
   phone: string;
   status: "active" | "inactive";
+  allowTransactions?: boolean;
+  allowTransfer?: boolean;
+  allowPhysicalInventory?: boolean;
+  defaultReceiving?: boolean;
+  defaultIssuance?: boolean;
+  remarks?: string;
   /** Derived */
+  locationCount?: number;
   itemCount?: number;
   totalUnits?: number;
   stockValue?: number;
