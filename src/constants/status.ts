@@ -4,7 +4,7 @@ import type { BadgeTone } from "@/components/ui/Badge";
 export const STATUS_META: Record<string, { label: string; tone: BadgeTone }> = {
   active: { label: "Active", tone: "success" },
   inactive: { label: "Inactive", tone: "neutral" },
-  discontinued: { label: "Discontinued", tone: "neutral" },
+  discontinued: { label: "Inactive", tone: "neutral" },
   "in-stock": { label: "Sufficient", tone: "success" },
   "low-stock": { label: "Below Reorder", tone: "warning" },
   "out-of-stock": { label: "Out of Stock", tone: "danger" },

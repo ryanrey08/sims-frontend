@@ -34,6 +34,23 @@ export interface Product extends Timestamps {
   preferredSupplierId: ID | null;
   barcode?: string;
   status: "active" | "discontinued";
+  /** Item Master details (mockup p38). */
+  itemType?: string;
+  shortDescription?: string;
+  subcategory?: string;
+  itemGroup?: string;
+  brand?: string;
+  model?: string;
+  accountCode?: string;
+  minStock?: number;
+  maxStock?: number;
+  defaultWarehouseId?: ID | null;
+  unitPrice?: number;
+  valuationMethod?: string;
+  specifications?: string;
+  remarks?: string;
+  /** Small data-URL thumbnail kept by the mock API; a real API returns a URL. */
+  imageUrl?: string;
   /** Derived */
   categoryName?: string;
   supplierName?: string | null;

@@ -47,7 +47,7 @@ export const catalogRoutes: MockRoute[] = [
     pattern: "/products",
     handler: ({ query }) => {
       const warehouseId = query.warehouseId || undefined;
-      const items = applyFilters(getDb().products, query, ["status", "categoryId", "preferredSupplierId", "unit"])
+      const items = applyFilters(getDb().products, query, ["status", "categoryId", "preferredSupplierId", "unit", "itemType"])
         .filter((item) => matchesSearch(query.search, [item.sku, item.name, item.barcode]))
         .map((item) => enrichProduct(item, warehouseId))
         .filter((item) => !query.stockStatus || query.stockStatus === "all" || item.stockStatus === query.stockStatus);

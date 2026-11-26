@@ -13,7 +13,7 @@ export const ACTIVE_STATUS_OPTIONS: SelectOption[] = [
 ];
 export const PRODUCT_STATUS_OPTIONS: SelectOption[] = [
   { label: "Active", value: "active" },
-  { label: "Discontinued", value: "discontinued" },
+  { label: "Inactive", value: "discontinued" },
 ];
 export const STOCK_STATUS_OPTIONS: SelectOption[] = [
   { label: "Sufficient", value: "in-stock" },
@@ -26,6 +26,10 @@ export const WAREHOUSE_TYPE_OPTIONS: SelectOption[] = [
   { label: "Property", value: "property" },
   { label: "Field", value: "field" },
 ];
+
+export const ITEM_TYPES = ["Consumable", "Semi-Expendable", "Non-Expendable", "Spare Parts", "Fuel and Lubricants"];
+export const ITEM_TYPE_OPTIONS: SelectOption[] = ITEM_TYPES.map((value) => ({ label: value, value }));
+export const VALUATION_METHOD_OPTIONS: SelectOption[] = ["Moving Average", "FIFO", "Specific Identification"].map((value) => ({ label: value, value }));
 
 /** Category pill colours used in the mockups. */
 export function categoryTone(name: string | undefined) {

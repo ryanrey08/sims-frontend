@@ -161,6 +161,11 @@ export function createSeedDatabase(): MockDatabase {
       preferredSupplierId: suppliers[CATEGORY_SUPPLIER[code]].id,
       barcode: `480${String(1000000000 + index * 7919).slice(0, 10)}`,
       status: index === 14 ? "discontinued" : "active",
+      itemType: cost >= 5000 ? "Semi-Expendable" : "Consumable",
+      accountCode: cost >= 5000 ? "10405020" : "10404010",
+      minStock: reorder,
+      maxStock: reorder * 6,
+      valuationMethod: "Moving Average",
       createdAt: created,
       updatedAt: created,
     };
