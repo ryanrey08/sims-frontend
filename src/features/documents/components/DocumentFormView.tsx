@@ -1,52 +1,66 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Building2, CheckCircle2, FileText, Info, ListChecks, Mail, MapPin, Package, Paperclip, Phone, Plus, Save, Send, Trash2, Upload, UserRound } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { QueryBoundary } from "@/components/common/QueryBoundary";
 import { Unauthorized } from "@/components/common/Unauthorized";
 import { DynamicField, schemaForFields, toApiValues } from "@/components/forms/DynamicField";
 import { FormErrorBanner } from "@/components/forms/FormErrorBanner";
-import { FormField, RequiredNote, fieldA11y } from "@/components/forms/FormField";
+import { FormBlock, HField } from "@/components/forms/HField";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { getDocumentDef, type DocumentDef } from "@/config/documents";
+import { documentPrefix, getDocumentDef, type DocumentDef } from "@/config/documents";
 import { useBreadcrumbLabel } from "@/hooks/useBreadcrumbLabel";
-import { useReferenceOptions } from "@/hooks/useReferenceOptions";
+import { usePermissions } from "@/hooks/usePermission";
 import { useToast } from "@/hooks/useToast";
+import { pickCsvFile } from "@/lib/utils/csv";
+import { cn } from "@/lib/utils/cn";
 import { applyServerErrors, nonFieldError } from "@/lib/utils/errors";
-import { formatCurrency, todayISO } from "@/lib/utils/format";
-import { useGetDocumentQuery, useSaveDocumentMutation } from "@/services/api/endpoints/documentsApi";
+import { formatCurrency, formatDate, formatNumber, todayISO } from "@/lib/utils/format";
+import { useAppSelector } from "@/lib/redux/hooks";
+import { selectCurrentUser } from "@/store/features/authSlice";
+import { useGetDocumentQuery, useGetDocumentsQuery, useSaveDocumentMutation } from "@/services/api/endpoints/documentsApi";
+import { useGetMasterRecordsQuery } from "@/services/api/endpoints/mastersApi";
 import { useGetProductsQuery } from "@/services/api/endpoints/productsApi";
-import type { TransactionDocument } from "@/types/records";
-import { ApprovalWorkflow } from "./ApprovalWorkflow";
+import { useGetSuppliersQuery } from "@/services/api/endpoints/suppliersApi";
+import type { DocumentAttachment, TransactionDocument } from "@/types/records";
+import { HorizontalWorkflow } from "./ApprovalWorkflow";
+import { Attachments } from "./Attachments";
+import { HeaderValue, SummaryRows, TotalAmount } from "./parts";
 
 const itemSchema = z.object({
   refId: z.string().min(1, "Select an item."),
   quantity: z.string(),
+  poQty: z.string(),
+  receivedQty: z.string(),
   countedQty: z.string(),
   condition: z.string(),
   remarks: z.string(),
 });
 
-type FormValues = { date: string; remarks: string; fields: Record<string, string>; items: z.infer<typeof itemSchema>[] };
+type ItemValues = z.infer<typeof itemSchema>;
+type FormValues = { date: string; remarks: string; fields: Record<string, string>; items: ItemValues[] };
+
+const isWhole = (value: string, min: number) => value !== "" && Number.isInteger(Number(value)) && Number(value) >= min;
 
 function buildSchema(def: DocumentDef) {
+  const receiving = def.ui.itemColumns.includes("receivedQty");
   const items = z
     .array(
       itemSchema.superRefine((item, ctx) => {
-        if (def.itemMode === "stock" && !(Number.isInteger(Number(item.quantity)) && Number(item.quantity) > 0)) {
-          ctx.addIssue({ code: "custom", path: ["quantity"], message: "Enter a quantity above 0." });
+        if (def.itemMode === "stock" && !isWhole(item.quantity, receiving ? 0 : 1)) {
+          ctx.addIssue({ code: "custom", path: ["quantity"], message: receiving ? "Enter the accepted quantity." : "Enter a quantity above 0." });
         }
-        if (def.itemMode === "count" && (item.countedQty === "" || !Number.isInteger(Number(item.countedQty)) || Number(item.countedQty) < 0)) {
-          ctx.addIssue({ code: "custom", path: ["countedQty"], message: "Enter the counted quantity." });
-        }
+        if (receiving && !isWhole(item.receivedQty, 1)) ctx.addIssue({ code: "custom", path: ["receivedQty"], message: "Enter the received quantity." });
+        if (receiving && Number(item.quantity) > Number(item.receivedQty)) ctx.addIssue({ code: "custom", path: ["quantity"], message: "Accepted cannot exceed received." });
+        if (def.itemMode === "count" && !isWhole(item.countedQty, 0)) ctx.addIssue({ code: "custom", path: ["countedQty"], message: "Enter the counted quantity." });
       }),
     )
     .min(1, "Add at least one item.")
@@ -54,12 +68,24 @@ function buildSchema(def: DocumentDef) {
   return z.object({ date: z.string().min(1, "Date is required."), remarks: z.string(), fields: schemaForFields(def.fields), items });
 }
 
+const EMPTY_ITEM: ItemValues = { refId: "", quantity: "1", poQty: "", receivedQty: "", countedQty: "", condition: "", remarks: "" };
+const tinted = { green: "bg-[#e8f7ee] text-[#1a7f46]", red: "bg-[#fdeeee] text-red-600", blue: "bg-[#eaf2fe] text-[#2f6fd6]", yellow: "bg-[#fdf5e3]" };
+
+/**
+ * Transaction form from the mockups (p10, p15, p26, p29, p31): status pill, number and date
+ * in the header; information card with horizontal labels; item table; remarks / attachments,
+ * summary with the pink total, or the horizontal approval stepper; and the action bar.
+ */
 function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocument }) {
   const router = useRouter();
   const toast = useToast();
+  const { can } = usePermissions();
+  const user = useAppSelector(selectCurrentUser);
+  const { ui } = def;
   const [save, { error: mutationError }] = useSaveDocumentMutation();
   const schema = useMemo(() => buildSchema(def), [def]);
-  const emptyItem = { refId: "", quantity: "1", countedQty: "", condition: "", remarks: "" };
+  const [attachments, setAttachments] = useState<DocumentAttachment[]>(doc?.attachments ?? []);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
   const {
     register,
     control,
@@ -71,31 +97,98 @@ function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocumen
     defaultValues: {
       date: doc?.date ?? todayISO(),
       remarks: doc?.remarks ?? "",
-      fields: Object.fromEntries(def.fields.map((field) => [field.name, doc?.fields[field.name] === null || doc?.fields[field.name] === undefined ? "" : String(doc.fields[field.name])])),
-      items: doc?.items.map((item) => ({ refId: item.refId, quantity: String(Math.abs(item.quantity)), countedQty: item.countedQty === undefined ? "" : String(item.countedQty), condition: item.condition ?? "", remarks: item.remarks ?? "" })) ?? [emptyItem],
+      fields: Object.fromEntries(
+        def.fields.map((field) => {
+          const value = doc?.fields[field.name];
+          if (value === null || value === undefined) return [field.name, !doc && (field.name === "requestedBy" || field.name === "preparedBy") ? (user?.name ?? "") : ""];
+          return [field.name, String(value)];
+        }),
+      ),
+      items:
+        doc?.items.map((item) => ({
+          refId: item.refId,
+          quantity: String(Math.abs(item.quantity)),
+          poQty: item.poQty === undefined ? "" : String(item.poQty),
+          receivedQty: item.receivedQty === undefined ? "" : String(item.receivedQty),
+          countedQty: item.countedQty === undefined ? "" : String(item.countedQty),
+          condition: item.condition ?? "",
+          remarks: item.remarks ?? "",
+        })) ?? [EMPTY_ITEM],
     },
   });
   const { fields: lines, append, remove } = useFieldArray({ control, name: "items" });
   const items = useWatch({ control, name: "items" });
-  const warehouseId = useWatch({ control, name: def.key === "stock-transfers" ? "fields.fromWarehouseId" : "fields.warehouseId" }) as string | undefined;
+  const fieldValues = useWatch({ control, name: "fields" });
+  const date = useWatch({ control, name: "date" });
+  const warehouseId = ui.warehouseField ? fieldValues?.[ui.warehouseField] : undefined;
 
-  // Stock totals are scoped to the selected warehouse so preparers see what is available.
-  const { data: products } = useGetProductsQuery({ status: "active", pageSize: 200, sortBy: "name", warehouseId: warehouseId || undefined }, { skip: def.itemMode === "property" });
-  const { options: propertyOptions } = useReferenceOptions(def.itemMode === "property" ? "properties" : undefined);
+  // Stock is scoped to the selected warehouse so preparers see what is available there.
+  const { data: products } = useGetProductsQuery({ status: "active", pageSize: 200, sortBy: "sku", warehouseId: warehouseId || undefined }, { skip: def.itemMode === "property" });
+  const { data: properties } = useGetMasterRecordsQuery({ resource: "properties", params: { pageSize: 200 } }, { skip: def.itemMode !== "property" });
+  const { data: suppliers } = useGetSuppliersQuery({ pageSize: 100 }, { skip: !def.fields.some((field) => field.optionsFrom === "suppliers") });
+  const { data: existing } = useGetDocumentsQuery({ type: def.key, params: { pageSize: 500 } }, { skip: Boolean(doc) });
   const productById = useMemo(() => new Map((products?.data ?? []).map((product) => [product.id, product])), [products]);
-  const options = def.itemMode === "property" ? propertyOptions : (products?.data ?? []).map((product) => ({ label: `${product.sku} — ${product.name}`, value: product.id }));
-  const total = (items ?? []).reduce((sum, item) => sum + (Number(item.quantity) || 0) * (productById.get(item.refId)?.unitCost ?? 0), 0);
+  const propertyById = useMemo(() => new Map((properties?.data ?? []).map((record) => [record.id, record])), [properties]);
+  const itemOptions =
+    def.itemMode === "property"
+      ? (properties?.data ?? []).filter((record) => !["disposed", "lost"].includes(String(record.status))).map((record) => ({ label: String(record.propertyNo), value: record.id }))
+      : (products?.data ?? []).map((product) => ({ label: product.sku, value: product.id }));
 
-  const submit = (sendForApproval: boolean) =>
+  const inbound = def.key !== "stock-adjustments" || String(fieldValues?.adjustmentType ?? "").startsWith("Stock In");
+  const lineInfo = (item: ItemValues | undefined) => {
+    const product = item ? productById.get(item.refId) : undefined;
+    const property = item ? propertyById.get(item.refId) : undefined;
+    const quantity = def.itemMode === "property" ? 1 : Number(item?.quantity) || 0;
+    const unitCost = def.itemMode === "property" ? Number(property?.acquisitionCost ?? 0) : (product?.unitCost ?? 0);
+    const available = product?.totalStock ?? 0;
+    return {
+      description: def.itemMode === "property" ? String(property?.description ?? "") : (product?.name ?? ""),
+      unit: def.itemMode === "property" ? (property ? "unit" : "") : (product?.unit ?? ""),
+      available,
+      unitCost,
+      quantity,
+      amount: quantity * unitCost,
+      rejected: Math.max(0, (Number(item?.receivedQty) || 0) - quantity),
+      variance: (Number(item?.countedQty) || 0) - available,
+      newStock: inbound ? available + quantity : available - quantity,
+    };
+  };
+  const totals = (items ?? []).reduce(
+    (sum, item) => {
+      const info = lineInfo(item);
+      return {
+        quantity: sum.quantity + info.quantity,
+        amount: sum.amount + info.amount,
+        poQty: sum.poQty + (Number(item.poQty) || 0),
+        received: sum.received + (Number(item.receivedQty) || 0),
+        rejected: sum.rejected + info.rejected,
+        variance: sum.variance + (item.countedQty === "" ? 0 : info.variance),
+      };
+    },
+    { quantity: 0, amount: 0, poQty: 0, received: 0, rejected: 0, variance: 0 },
+  );
+
+  // Next number preview, e.g. ST-2026-00129 (the API assigns the final number).
+  const prefix = documentPrefix(def, fieldValues ?? {});
+  const nextNumber = useMemo(() => {
+    const numbers = (existing?.data ?? []).filter((item) => item.number.startsWith(`${prefix}-`)).map((item) => Number(item.number.split("-").pop()) || 0);
+    return `${prefix}-${new Date().getFullYear()}-${String(Math.max(100, ...numbers) + 1).padStart(5, "0")}`;
+  }, [existing, prefix]);
+  const number = doc?.number ?? nextNumber;
+
+  const submit = (mode: "draft" | "submit" | "post") =>
     handleSubmit(async (values) => {
       const body = {
         date: values.date,
         remarks: values.remarks || undefined,
-        submit: sendForApproval,
+        attachments,
+        submit: mode !== "draft",
         fields: toApiValues(def.fields, values.fields),
         items: values.items.map((item) => ({
           refId: item.refId,
           quantity: def.itemMode === "property" ? 1 : Number(item.quantity || 0),
+          poQty: item.poQty === "" ? undefined : Number(item.poQty),
+          receivedQty: item.receivedQty === "" ? undefined : Number(item.receivedQty),
           countedQty: def.itemMode === "count" ? Number(item.countedQty) : undefined,
           condition: item.condition || undefined,
           remarks: item.remarks || undefined,
@@ -103,7 +196,12 @@ function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocumen
       };
       try {
         const saved = await save({ type: def.key, id: doc?.id, body }).unwrap();
-        toast.success(sendForApproval ? "Submitted for approval" : "Draft saved", `${saved.number} was saved.`);
+        if (mode === "post") {
+          // Opens the "Approve and Post" confirmation on the saved document.
+          router.push(`/documents/${def.key}/${saved.id}?approve=1`);
+          return;
+        }
+        toast.success(mode === "submit" ? "Submitted for approval" : "Draft saved", `${saved.number} was saved.`);
         router.push(`/documents/${def.key}/${saved.id}`);
       } catch (error) {
         // Field errors from the API map onto the header fields; values are kept.
@@ -116,109 +214,315 @@ function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocumen
       }
     });
 
+  const importItems = async () => {
+    try {
+      const rows = await pickCsvFile();
+      if (!rows.length) return;
+      const bySku = new Map((products?.data ?? []).map((product) => [product.sku.toLowerCase(), product]));
+      let added = 0;
+      rows.forEach((row) => {
+        const product = bySku.get(String(row.itemcode ?? row.code ?? row.sku ?? "").toLowerCase());
+        if (!product || (items ?? []).some((item) => item.refId === product.id)) return;
+        append({ ...EMPTY_ITEM, refId: product.id, quantity: String(row.quantity ?? row.qty ?? 1), receivedQty: String(row.received ?? row.quantity ?? ""), countedQty: String(row.counted ?? "") });
+        added += 1;
+      });
+      toast.success("Items imported", `${added} of ${rows.length} rows added.`);
+    } catch (error) {
+      toast.error("Could not read the file", error);
+    }
+  };
+
+  const removeSelected = () => {
+    const indexes = [...selected].sort((a, b) => b - a);
+    if (indexes.length >= lines.length) {
+      toast.error("Keep at least one item", "A document needs at least one line.");
+      return;
+    }
+    remove(indexes);
+    setSelected(new Set());
+  };
+
+  const mainFields = def.fields.filter((field) => field.group !== "side");
+  const sideFields = def.fields.filter((field) => field.group === "side");
+  const supplier = suppliers?.data.find((item) => item.id === fieldValues?.supplierId);
   const itemsError = errors.items?.message ?? errors.items?.root?.message;
+  const cols = ui.itemColumns;
+  const showQty = def.itemMode !== "property";
+  const approver = can(def.approvePermission);
+  const attachmentsLeft = ui.showAmount || def.key === "stock-adjustments";
 
   return (
     <>
-      <PageHeader icon={FileText} title={doc ? `Edit ${doc.number}` : `New ${def.title}`} description={def.formName ?? def.description} />
-      <form onSubmit={submit(true)} noValidate>
-        <div className="grid gap-6 xl:grid-cols-3">
-          <div className="space-y-6 xl:col-span-2">
-            <Card>
-              <CardHeader title={`${def.title} Information`} />
-              <CardContent>
-                <FormErrorBanner error={nonFieldError(mutationError)} />
-                <RequiredNote />
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <FormField label="Date" htmlFor="date" required error={errors.date?.message}>
-                    <Input type="date" {...fieldA11y("date", errors.date?.message)} {...register("date")} />
-                  </FormField>
-                  {def.fields.map((field) => (
-                    <DynamicField key={field.name} field={field} registration={register(`fields.${field.name}`)} error={errors.fields?.[field.name]?.message} />
+      <PageHeader
+        icon={FileText}
+        title={doc ? <>Edit {ui.title} <span className="font-normal">– {doc.number}</span></> : ui.titleNote ? <>{ui.title} <span className="font-normal">{ui.titleNote}</span></> : ui.newLabel}
+        description={ui.subtitle}
+        aside={
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge tone={doc?.status === "rejected" ? "danger" : "success"}>{doc?.status === "rejected" ? "Returned" : "Draft"}</Badge>
+            <HeaderValue label={ui.numberLabel} value={number} tone="red" />
+            <HeaderValue label="Date" value={formatDate(date)} />
+          </div>
+        }
+      />
+      <form onSubmit={submit("submit")} noValidate className="space-y-4">
+        <FormErrorBanner error={nonFieldError(mutationError)} />
+        <div className={cn("grid gap-4", (ui.sideTitle || sideFields.length > 0) && "xl:grid-cols-[2fr_1fr]")}>
+          <FormBlock title={ui.infoTitle} icon={FileText}>
+            <div className="grid gap-x-6 gap-y-3 md:grid-cols-2">
+              <HField label={ui.numberLabel} htmlFor="doc-number" required labelWidth="w-40">
+                <Input id="doc-number" value={number} readOnly className="bg-slate-100 font-semibold text-slate-700" />
+              </HField>
+              <HField label={def.key === "stock-transfers" ? "Transfer Date" : "Date"} htmlFor="date" required error={errors.date?.message} labelWidth="w-40">
+                <Input id="date" type="date" aria-invalid={errors.date ? true : undefined} {...register("date")} />
+              </HField>
+              {mainFields.map((field) => (
+                <DynamicField
+                  key={field.name}
+                  layout="horizontal"
+                  field={field}
+                  registration={register(`fields.${field.name}`)}
+                  error={errors.fields?.[field.name]?.message}
+                  className={cn("[&>label]:sm:w-40", field.wide && "md:col-span-2")}
+                />
+              ))}
+            </div>
+          </FormBlock>
+          {(ui.sideTitle || sideFields.length > 0) && (
+            <FormBlock title={ui.sideTitle ?? "Additional Information"} icon={sideFields.length ? UserRound : Building2}>
+              {sideFields.length > 0 ? (
+                <div className="space-y-3">
+                  {sideFields.map((field) => (
+                    <DynamicField key={field.name} layout="horizontal" field={field} registration={register(`fields.${field.name}`)} error={errors.fields?.[field.name]?.message} className="[&>label]:sm:w-32" />
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader
-                title={def.itemMode === "property" ? "Property Items" : "Items"}
-                description={def.itemMode === "count" ? "System quantities are captured when you save. Enter what was physically counted." : undefined}
-                actions={<Button size="sm" variant="secondary" onClick={() => append(emptyItem)} leftIcon={<Plus className="h-3.5 w-3.5" />}>Add Item</Button>}
-              />
-              {itemsError && <p role="alert" className="px-5 pt-3 text-xs text-red-600">{itemsError}</p>}
-              <ul className="divide-y divide-line">
+              ) : supplier ? (
+                <div className="space-y-2 text-[13px]">
+                  <p className="text-sm font-bold">{supplier.name}</p>
+                  {supplier.tin && <p className="text-slate-600">TIN: {supplier.tin}</p>}
+                  <p className="flex items-center gap-2"><UserRound className="h-4 w-4 text-slate-400" />{supplier.contactPerson}</p>
+                  <p className="flex items-center gap-2"><Phone className="h-4 w-4 text-slate-400" />{supplier.phone}</p>
+                  <p className="flex items-center gap-2"><Mail className="h-4 w-4 text-slate-400" />{supplier.email}</p>
+                  <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />{supplier.address}</p>
+                </div>
+              ) : (
+                <p className="flex items-center gap-2 text-[13px] text-slate-500"><Info className="h-4 w-4" />Select a supplier to see its details.</p>
+              )}
+            </FormBlock>
+          )}
+        </div>
+
+        <FormBlock
+          title={ui.itemsTitle}
+          icon={Package}
+          actions={
+            <>
+              <Button size="sm" variant="outline" className="border-brand-600 text-brand-600" onClick={() => append(EMPTY_ITEM)} leftIcon={<Plus className="h-3.5 w-3.5" />}>
+                {def.key === "stock-transfers" ? "Add Items" : "Add Item"}
+              </Button>
+              {def.itemMode !== "property" && (
+                <Button size="sm" variant="outline" onClick={importItems} leftIcon={<Upload className="h-3.5 w-3.5" />}>Import (Excel)</Button>
+              )}
+              <Button size="sm" variant="outline" className="border-red-300 text-red-600" onClick={removeSelected} disabled={!selected.size} leftIcon={<Trash2 className="h-3.5 w-3.5" />}>
+                Remove Selected
+              </Button>
+            </>
+          }
+        >
+          {itemsError && <p role="alert" className="mb-2 text-xs text-red-600">{itemsError}</p>}
+          <div className="-mx-4 overflow-x-auto">
+            <table className="w-full min-w-[860px] text-[13px]">
+              <thead>
+                <tr className="bg-[#f3f4f6] text-left text-xs font-bold text-ink">
+                  <th className="w-10 px-3 py-2.5"><span className="sr-only">Select</span></th>
+                  <th className="w-8 px-2 py-2.5">#</th>
+                  <th className="w-40 px-2 py-2.5">{def.itemMode === "property" ? "Property No." : "Item Code"} <span className="text-red-600">*</span></th>
+                  <th className="px-2 py-2.5">{def.itemMode === "property" ? "Description" : "Item Description"}</th>
+                  <th className="px-2 py-2.5">UoM</th>
+                  {def.itemMode === "count" && <th className="px-2 py-2.5 text-right">System Qty</th>}
+                  {cols.includes("available") && <th className="px-2 py-2.5 text-right">{def.key === "stock-transfers" ? "Available (From WH)" : "Available Qty"}</th>}
+                  {cols.includes("currentStock") && <th className="px-2 py-2.5 text-right">Current Stock</th>}
+                  {cols.includes("poQty") && <th className="w-24 px-2 py-2.5 text-right">PO Qty</th>}
+                  {cols.includes("receivedQty") && <th className="w-24 px-2 py-2.5 text-right">Received Qty <span className="text-red-600">*</span></th>}
+                  {showQty && <th className="w-28 px-2 py-2.5 text-right">{ui.quantityLabel} <span className="text-red-600">*</span></th>}
+                  {cols.includes("rejectedQty") && <th className="px-2 py-2.5 text-right">Rejected Qty</th>}
+                  {def.itemMode === "count" && <th className="px-2 py-2.5 text-right">Variance</th>}
+                  {cols.includes("newStock") && <th className="px-2 py-2.5 text-right">New Stock</th>}
+                  {cols.includes("condition") && <th className="w-36 px-2 py-2.5">Condition</th>}
+                  {cols.includes("unitCost") && <th className="px-2 py-2.5 text-right">{def.itemMode === "property" ? "Acquisition Cost" : "Unit Cost (₱)"}</th>}
+                  {cols.includes("amount") && <th className="px-2 py-2.5 text-right">Amount</th>}
+                  {cols.includes("remarks") && <th className="w-40 px-2 py-2.5">Remarks</th>}
+                  <th className="w-12 px-3 py-2.5 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
                 {lines.map((line, index) => {
                   const item = items?.[index];
-                  const product = item ? productById.get(item.refId) : undefined;
+                  const info = lineInfo(item);
                   const lineErrors = errors.items?.[index];
                   return (
-                    <li key={line.id} className="grid gap-3 p-4 md:grid-cols-[1fr_130px_44px] md:items-start">
-                      <div>
-                        <label htmlFor={`items.${index}.refId`} className="sr-only">Item</label>
-                        <Select id={`items.${index}.refId`} placeholder={def.itemMode === "property" ? "Select property" : "Select item"} options={options} aria-invalid={lineErrors?.refId ? true : undefined} {...register(`items.${index}.refId`)} />
+                    <tr key={line.id} className="align-top">
+                      <td className="px-3 py-2">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select line ${index + 1}`}
+                          className="mt-2.5 h-4 w-4 accent-brand-600"
+                          checked={selected.has(index)}
+                          onChange={(event) =>
+                            setSelected((current) => {
+                              const next = new Set(current);
+                              if (event.target.checked) next.add(index);
+                              else next.delete(index);
+                              return next;
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-2 py-2 pt-4 text-slate-500">{index + 1}</td>
+                      <td className="px-2 py-2">
+                        <label htmlFor={`items.${index}.refId`} className="sr-only">Item code, line {index + 1}</label>
+                        <Select id={`items.${index}.refId`} placeholder="Select" options={itemOptions} aria-invalid={lineErrors?.refId ? true : undefined} className="font-semibold text-[#2f6fd6]" {...register(`items.${index}.refId`)} />
                         {lineErrors?.refId && <p className="mt-1 text-xs text-red-600">{lineErrors.refId.message}</p>}
-                        {product && (
-                          <p className="mt-1 text-xs text-muted">
-                            {warehouseId ? "Available here" : "On hand (all warehouses)"}: {product.totalStock} {product.unit} · {formatCurrency(product.unitCost)} / {product.unit}
-                          </p>
-                        )}
-                        <Input aria-label={`Remarks for line ${index + 1}`} placeholder="Remarks (optional)" className="mt-2 h-9" {...register(`items.${index}.remarks`)} />
-                      </div>
-                      {def.itemMode === "stock" && (
-                        <div>
-                          <label htmlFor={`items.${index}.quantity`} className="text-xs text-muted md:sr-only">Quantity</label>
-                          <Input id={`items.${index}.quantity`} type="number" min={1} className="text-right" aria-invalid={lineErrors?.quantity ? true : undefined} {...register(`items.${index}.quantity`)} />
-                          {lineErrors?.quantity && <p className="mt-1 text-xs text-red-600">{lineErrors.quantity.message}</p>}
-                        </div>
+                      </td>
+                      <td className="px-2 py-2 pt-4">{info.description || <span className="text-slate-400">—</span>}</td>
+                      <td className="px-2 py-2 pt-4">{info.unit || "—"}</td>
+                      {def.itemMode === "count" && <td className="px-2 py-2 pt-4 text-right">{item?.refId ? formatNumber(info.available) : "—"}</td>}
+                      {cols.includes("available") && (
+                        <td className="px-2 py-2"><span className={cn("block rounded-md px-2 py-2 text-right font-semibold", tinted.green)}>{item?.refId ? formatNumber(info.available) : "—"}</span></td>
+                      )}
+                      {cols.includes("currentStock") && <td className="px-2 py-2 pt-4 text-right">{item?.refId ? formatNumber(info.available) : "—"}</td>}
+                      {cols.includes("poQty") && (
+                        <td className="px-2 py-2"><Input type="number" min={0} aria-label={`PO quantity, line ${index + 1}`} className="text-right" {...register(`items.${index}.poQty`)} /></td>
+                      )}
+                      {cols.includes("receivedQty") && (
+                        <td className="px-2 py-2">
+                          <Input type="number" min={0} aria-label={`Received quantity, line ${index + 1}`} className="text-right" aria-invalid={lineErrors?.receivedQty ? true : undefined} {...register(`items.${index}.receivedQty`)} />
+                          {lineErrors?.receivedQty && <p className="mt-1 text-xs text-red-600">{lineErrors.receivedQty.message}</p>}
+                        </td>
+                      )}
+                      {showQty && (
+                        <td className="px-2 py-2">
+                          {def.itemMode === "count" ? (
+                            <Input type="number" min={0} aria-label={`${ui.quantityLabel}, line ${index + 1}`} className={cn("text-right", tinted.yellow)} aria-invalid={lineErrors?.countedQty ? true : undefined} {...register(`items.${index}.countedQty`)} />
+                          ) : (
+                            <Input
+                              type="number"
+                              min={0}
+                              aria-label={`${ui.quantityLabel}, line ${index + 1}`}
+                              className={cn("text-right font-semibold", cols.includes("rejectedQty") && tinted.green, cols.includes("newStock") && (inbound ? tinted.green : tinted.red))}
+                              aria-invalid={lineErrors?.quantity ? true : undefined}
+                              {...register(`items.${index}.quantity`)}
+                            />
+                          )}
+                          {(lineErrors?.quantity || lineErrors?.countedQty) && <p className="mt-1 text-xs text-red-600">{(lineErrors.quantity ?? lineErrors.countedQty)?.message}</p>}
+                        </td>
+                      )}
+                      {cols.includes("rejectedQty") && (
+                        <td className="px-2 py-2"><span className={cn("block rounded-md px-2 py-2 text-right font-semibold", tinted.red)}>{formatNumber(info.rejected)}</span></td>
                       )}
                       {def.itemMode === "count" && (
-                        <div>
-                          <label htmlFor={`items.${index}.countedQty`} className="text-xs text-muted">Counted qty</label>
-                          <Input id={`items.${index}.countedQty`} type="number" min={0} className="text-right" aria-invalid={lineErrors?.countedQty ? true : undefined} {...register(`items.${index}.countedQty`)} />
-                          {lineErrors?.countedQty && <p className="mt-1 text-xs text-red-600">{lineErrors.countedQty.message}</p>}
-                        </div>
+                        <td className="px-2 py-2">
+                          <span className={cn("block rounded-md px-2 py-2 text-right font-semibold", item?.countedQty === "" ? "text-slate-400" : info.variance < 0 ? tinted.red : info.variance > 0 ? tinted.green : "")}>
+                            {item?.countedQty === "" ? "—" : info.variance > 0 ? `+${info.variance}` : info.variance}
+                          </span>
+                        </td>
                       )}
-                      {def.itemMode === "property" && (
-                        <div>
-                          <label htmlFor={`items.${index}.condition`} className="text-xs text-muted md:sr-only">Condition</label>
-                          <Select id={`items.${index}.condition`} placeholder="Condition" options={["Serviceable", "For Repair", "Unserviceable"].map((value) => ({ label: value, value }))} {...register(`items.${index}.condition`)} />
-                        </div>
+                      {cols.includes("newStock") && (
+                        <td className="px-2 py-2"><span className={cn("block rounded-md px-2 py-2 text-right font-semibold", tinted.blue)}>{item?.refId ? formatNumber(info.newStock) : "—"}</span></td>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => remove(index)} disabled={lines.length === 1} aria-label={`Remove line ${index + 1}`}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </li>
+                      {cols.includes("condition") && (
+                        <td className="px-2 py-2">
+                          <Select aria-label={`Condition, line ${index + 1}`} placeholder="Condition" options={["Serviceable", "For Repair", "Unserviceable"].map((value) => ({ label: value, value }))} {...register(`items.${index}.condition`)} />
+                        </td>
+                      )}
+                      {cols.includes("unitCost") && <td className="px-2 py-2 pt-4 text-right">{item?.refId ? formatCurrency(info.unitCost) : "—"}</td>}
+                      {cols.includes("amount") && <td className="px-2 py-2 pt-4 text-right font-semibold">{item?.refId ? formatCurrency(info.amount) : "—"}</td>}
+                      {cols.includes("remarks") && (
+                        <td className="px-2 py-2"><Input aria-label={`Remarks, line ${index + 1}`} placeholder="Remarks" {...register(`items.${index}.remarks`)} /></td>
+                      )}
+                      <td className="px-3 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          disabled={lines.length === 1}
+                          aria-label={`Remove line ${index + 1}`}
+                          className="mt-1 inline-flex h-7 w-7 items-center justify-center rounded-md border border-line text-red-600 hover:bg-red-50 disabled:opacity-40"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
                   );
                 })}
-              </ul>
-              {def.itemMode === "stock" && (
-                <div className="flex justify-end gap-6 border-t border-line bg-slate-50 px-5 py-3 text-sm">
-                  <span className="text-muted">{lines.length} item(s)</span>
-                  <span>Estimated amount <span className="ml-2 font-bold">{formatCurrency(total)}</span></span>
-                </div>
-              )}
-            </Card>
+              </tbody>
+            </table>
           </div>
-          <div className="space-y-6">
-            <Card>
-              <CardHeader title="Approval Workflow" description="This document is routed in this order." />
-              <CardContent>
-                <ApprovalWorkflow steps={def.approvals.map((role) => ({ role, status: "waiting" }))} compact />
-                <p className="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-muted">{def.effect}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader title="Remarks" />
-              <CardContent>
+          <div className="-mx-4 -mb-4 mt-2 flex flex-wrap justify-end gap-8 rounded-b-lg border-t border-line bg-slate-50 px-4 py-3 text-[13px]">
+            <span>Total Items: <b>{lines.length}</b></span>
+            {def.itemMode === "count" ? (
+              <span>Total Variance: <b className={totals.variance < 0 ? "text-red-600" : totals.variance > 0 ? "text-[#1f9d55]" : ""}>{totals.variance > 0 ? `+${totals.variance}` : totals.variance}</b></span>
+            ) : cols.includes("newStock") ? (
+              <span>Total Adjustment Qty: <b className={inbound ? "text-[#1f9d55]" : "text-red-600"}>{inbound ? "+" : "−"}{formatNumber(totals.quantity)}</b></span>
+            ) : (
+              <span>Total Quantity: <b>{formatNumber(totals.quantity)}</b></span>
+            )}
+          </div>
+        </FormBlock>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <FormBlock title={attachmentsLeft ? "Attachment(s)" : "Remarks"} icon={attachmentsLeft ? Paperclip : FileText}>
+            {attachmentsLeft ? (
+              <Attachments value={attachments} onChange={setAttachments} />
+            ) : (
+              <>
                 <label htmlFor="remarks" className="sr-only">Remarks</label>
-                <Textarea id="remarks" rows={4} placeholder="Notes for approvers" {...register("remarks")} />
-              </CardContent>
-              <CardFooter className="flex-wrap">
-                <Button variant="outline" onClick={() => router.back()} disabled={isSubmitting}>Cancel</Button>
-                <Button variant="secondary" onClick={submit(false)} disabled={isSubmitting}>Save as Draft</Button>
-                <Button type="submit" loading={isSubmitting}>Submit for Approval</Button>
-              </CardFooter>
-            </Card>
+                <Textarea id="remarks" rows={4} placeholder="Enter remarks (optional)" {...register("remarks")} />
+              </>
+            )}
+          </FormBlock>
+          {ui.showAmount ? (
+            <FormBlock title="Summary" icon={ListChecks}>
+              <SummaryRows
+                rows={
+                  cols.includes("receivedQty")
+                    ? [
+                        { label: "Total PO Quantity", value: formatNumber(totals.poQty) },
+                        { label: "Total Received", value: formatNumber(totals.received) },
+                        { label: "Total Accepted", value: formatNumber(totals.quantity), tone: "green" },
+                        { label: "Total Rejected", value: formatNumber(totals.rejected), tone: "red" },
+                      ]
+                    : [
+                        { label: "Total Items", value: lines.length },
+                        { label: "Total Quantity", value: formatNumber(totals.quantity) },
+                      ]
+                }
+              />
+              <TotalAmount value={formatCurrency(totals.amount)} />
+              <label htmlFor="remarks" className="mt-3 block text-xs font-semibold text-slate-700">Remarks / Notes</label>
+              <Textarea id="remarks" rows={2} className="mt-1" placeholder="Enter remarks (optional)" {...register("remarks")} />
+            </FormBlock>
+          ) : def.key === "stock-adjustments" ? (
+            <FormBlock title="Remarks / Notes" icon={FileText}>
+              <label htmlFor="remarks" className="sr-only">Remarks / Notes</label>
+              <Textarea id="remarks" rows={4} placeholder="Enter remarks (optional)" {...register("remarks")} />
+            </FormBlock>
+          ) : (
+            <FormBlock title="Approval Workflow" icon={CheckCircle2}>
+              <div className="py-2">
+                <HorizontalWorkflow requestor={fieldValues?.requestedBy || user?.name || "Requestor"} roles={def.approvals} />
+              </div>
+            </FormBlock>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-white px-4 py-3">
+          <Button variant="outline" onClick={() => router.push(`/documents/${def.key}`)} disabled={isSubmitting} leftIcon={<ArrowLeft className="h-4 w-4" />}>Back to List</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={submit("draft")} disabled={isSubmitting} leftIcon={<Save className="h-4 w-4" />}>Save as Draft</Button>
+            <Button type="submit" variant={approver && ui.showAmount ? "outline" : "primary"} loading={isSubmitting} leftIcon={<Send className="h-4 w-4" />}>Submit for Approval</Button>
+            {approver && ui.showAmount && (
+              <Button variant="success" onClick={submit("post")} disabled={isSubmitting} leftIcon={<CheckCircle2 className="h-4 w-4" />}>Approve and Post</Button>
+            )}
           </div>
         </div>
       </form>
@@ -229,7 +533,7 @@ function DocumentForm({ def, doc }: { def: DocumentDef; doc?: TransactionDocumen
 export function DocumentFormView({ type, id }: { type: string; id?: string }) {
   const def = getDocumentDef(type);
   const query = useGetDocumentQuery({ type, id: id ?? "" }, { skip: !id || !def });
-  useBreadcrumbLabel(type, def?.title);
+  useBreadcrumbLabel(type, def?.ui.title);
   useBreadcrumbLabel(id, query.data?.number);
   if (!def) return <Unauthorized />;
   if (!id) return <DocumentForm key={def.key} def={def} />;

@@ -8,6 +8,7 @@ import { useReferenceOptions } from "@/hooks/useReferenceOptions";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { FormField, fieldA11y } from "./FormField";
+import { HField } from "./HField";
 
 /** Builds a Zod schema for config-driven fields. Values are edited as strings and converted on submit. */
 export function schemaForFields(fields: FieldDef[]) {
@@ -47,18 +48,23 @@ export function DynamicField({
   registration,
   error,
   className,
+  layout = "stacked",
+  readOnly,
 }: {
   field: FieldDef;
   registration: UseFormRegisterReturn;
   error?: string;
   className?: string;
+  /** "horizontal" puts the label on the left, as in the mockup transaction forms. */
+  layout?: "stacked" | "horizontal";
+  readOnly?: boolean;
 }) {
   const { options: referenceOptions, loading } = useReferenceOptions(field.optionsFrom);
   const a11y = fieldA11y(field.name, error);
   let control: React.ReactNode;
   if (field.type === "select") {
     const options = field.optionsFrom ? referenceOptions : (field.options ?? []).map((value) => ({ label: optionLabel(value), value }));
-    control = <Select placeholder={loading ? "Loading…" : `Select ${field.label.toLowerCase()}`} options={options} {...a11y} {...registration} />;
+    control = <Select placeholder={loading ? "Loading…" : `Select ${field.label.toLowerCase()}`} options={options} disabled={readOnly} {...a11y} {...registration} />;
   } else if (field.type === "textarea") {
     control = <Textarea rows={2} placeholder={field.placeholder} {...a11y} {...registration} />;
   } else {
@@ -70,6 +76,14 @@ export function DynamicField({
         {...a11y}
         {...registration}
       />
+    );
+  }
+  const label = field.type === "currency" ? `${field.label} (₱)` : field.label;
+  if (layout === "horizontal") {
+    return (
+      <HField label={label} htmlFor={field.name} required={field.required} error={error} hint={field.hint} className={className}>
+        {control}
+      </HField>
     );
   }
   return (

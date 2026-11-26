@@ -20,8 +20,8 @@ export function useReferenceOptions(source: string | undefined): { options: Sele
   const masters = useGetMasterRecordsQuery({ resource: source ?? "", params: { pageSize: 200 } }, { skip: !master });
 
   return useMemo(() => {
-    if (source === "warehouses") return { options: (warehouses.data?.data ?? []).map((item) => ({ label: item.name, value: item.id })), loading: warehouses.isLoading };
-    if (source === "suppliers") return { options: (suppliers.data?.data ?? []).map((item) => ({ label: item.name, value: item.id })), loading: suppliers.isLoading };
+    if (source === "warehouses") return { options: (warehouses.data?.data ?? []).map((item) => ({ label: `${item.code} – ${item.name}`, value: item.id })), loading: warehouses.isLoading };
+    if (source === "suppliers") return { options: (suppliers.data?.data ?? []).map((item) => ({ label: `${item.code} – ${item.name}`, value: item.id })), loading: suppliers.isLoading };
     if (source === "products") return { options: (products.data?.data ?? []).map((item) => ({ label: `${item.sku} — ${item.name}`, value: item.id })), loading: products.isLoading };
     if (master) {
       return {

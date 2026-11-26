@@ -57,7 +57,7 @@ const BUILDERS: Record<string, (query: Query) => Omit<ReportTable, "code" | "tit
         doc.items.map((item) => ({ date: doc.date, number: doc.number, supplier: doc.labels?.supplierId ?? "", poNumber: String(doc.fields.poNumber ?? ""), item: item.description ?? "", unit: item.unit ?? "", quantity: item.quantity, amount: item.quantity * (item.unitCost ?? 0) })),
       );
     return {
-      columns: [col("date", "Date", "date"), col("number", "IAR No."), col("supplier", "Supplier"), col("poNumber", "PO No."), col("item", "Item"), col("unit", "Unit"), col("quantity", "Qty Accepted", "number"), col("amount", "Amount", "currency")],
+      columns: [col("date", "Date", "date"), col("number", "GRN No."), col("supplier", "Supplier"), col("poNumber", "PO No."), col("item", "Item"), col("unit", "Unit"), col("quantity", "Qty Accepted", "number"), col("amount", "Amount", "currency")],
       rows,
       totals: { quantity: sum(rows, "quantity"), amount: sum(rows, "amount") },
       signatories: signatories("Inspection Officer"),

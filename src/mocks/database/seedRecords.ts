@@ -1,4 +1,4 @@
-import { DOCUMENTS } from "@/config/documents";
+import { DOCUMENTS, documentPrefix } from "@/config/documents";
 import type { Product, Supplier, Warehouse } from "@/types/models";
 import type { ApprovalStep, DocumentItem, DocumentStatus, MasterRecord, TransactionDocument } from "@/types/records";
 import type { createRandom } from "./random";
@@ -163,7 +163,7 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
   const people = ["Juan Dela Cruz", "Maria Santos", "Mark Soriano", "Liza Mercado", "Joy Navarro"];
 
   DOCUMENTS.forEach((def) => {
-    const count = def.module === "property" ? 4 : statuses.length;
+    const count = def.module === "property" ? 4 : 12;
     for (let index = 0; index < count; index += 1) {
       const plan = statuses[index % statuses.length];
       const date = daysAgo(2 + index * 3 + random.int(0, 2), 10);
@@ -178,11 +178,16 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
         else if (field.optionsFrom === "suppliers") fields[field.name] = suppliers[index % 8].id;
         else if (field.optionsFrom === "employees") fields[field.name] = field.name.startsWith("to") ? employees[(index + 3) % employees.length].id : employee.id;
         else if (field.options) fields[field.name] = field.options[index % field.options.length];
-        else if (field.type === "date") fields[field.name] = isoDate(new Date(date.getTime() + 3 * 86400000));
+        else if (field.type === "date") fields[field.name] = isoDate(new Date(date.getTime() + (field.name === "dateRequested" ? -86400000 : 3 * 86400000)));
         else if (field.type === "currency") fields[field.name] = 1500 * (index + 1);
         else if (field.name === "poNumber") fields[field.name] = `PO-2026-${String(101 + index).padStart(4, "0")}`;
         else if (field.name === "period") fields[field.name] = "October 2026";
         else if (field.name === "office" || field.name === "department") fields[field.name] = employee.office as string;
+        else if (field.name === "referenceNo") fields[field.name] = `PR-2026-${String(301 + index).padStart(5, "0")}`;
+        else if (field.name === "purpose") fields[field.name] = "For official use of the office.";
+        else if (field.name === "description") fields[field.name] = def.key === "physical-counts" ? ["Monthly full count of supplies", "Cycle count – fast-moving items", "Spot check – ICT supplies"][index % 3] : "Adjustment based on the latest physical count.";
+        else if (field.name.endsWith("Designation")) fields[field.name] = field.name.startsWith("requested") ? "Administrative Officer IV" : "Head, Academic Affairs";
+        else if (field.name === "approvedBy") fields[field.name] = "Dr. Joemel Cunanan";
         else if (field.type === "text") fields[field.name] = field.name.toLowerCase().includes("no") ? `REF-${random.int(10000, 99999)}` : people[index % people.length];
       });
 
@@ -200,14 +205,20 @@ export function seedMastersAndDocuments({ warehouses, products, suppliers, rando
             const variance = offset === 1 ? 0 : random.int(-4, 3);
             return { refId: product.id, quantity: variance, systemQty, countedQty: systemQty + variance, unitCost: product.unitCost };
           }
-          return { refId: product.id, quantity: random.int(1, 5), unitCost: product.unitCost };
+          const quantity = random.int(1, 5);
+          if (def.key === "receiving") {
+            const rejected = offset === 2 ? 1 : 0;
+            return { refId: product.id, quantity, poQty: quantity + rejected, receivedQty: quantity + rejected, rejectedQty: rejected, unitCost: product.unitCost };
+          }
+          return { refId: product.id, quantity, unitCost: product.unitCost };
         });
       }
 
+      const prefix = documentPrefix(def, fields);
       documents.push({
         id: `${def.prefix.toLowerCase()}-${index + 1}`,
         type: def.key,
-        number: `${def.prefix}-2026-${String(index + 101).padStart(4, "0")}`,
+        number: `${prefix}-2026-${String(index + 101).padStart(5, "0")}`,
         date: isoDate(date),
         status: plan.status,
         fields,

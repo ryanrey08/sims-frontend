@@ -17,6 +17,10 @@ export interface FieldDef {
   unique?: boolean;
   placeholder?: string;
   hint?: string;
+  /** Transaction forms: "side" fields render in the right-hand information card. */
+  group?: "main" | "side";
+  /** Span both columns of a two-column form. */
+  wide?: boolean;
 }
 
 export interface MasterDataDef {

@@ -1,4 +1,4 @@
-import { getDocumentDef, type DocumentDef } from "@/config/documents";
+import { displayStatus, documentPrefix, getDocumentDef, type DocumentDef } from "@/config/documents";
 import { getMasterData, type FieldDef } from "@/config/masterData";
 import type { DocumentItem, MasterRecord, TransactionDocument } from "@/types/records";
 import { getDb, newId, nowISO, persistDb } from "../database/db";
@@ -231,13 +231,17 @@ function normalizeItems(def: DocumentDef, items: DocumentItem[], fields: Record<
       const countedQty = Number(item.countedQty ?? 0);
       return { refId: item.refId, systemQty, countedQty, quantity: countedQty - systemQty, unitCost: product?.unitCost, remarks: item.remarks };
     }
-    return { refId: item.refId, quantity: Number(item.quantity), unitCost: item.unitCost ?? product?.unitCost, remarks: item.remarks };
+    const extra = def.ui.itemColumns.includes("receivedQty")
+      ? { poQty: Number(item.poQty ?? item.quantity), receivedQty: Number(item.receivedQty ?? item.quantity), rejectedQty: Math.max(0, Number(item.receivedQty ?? item.quantity) - Number(item.quantity)) }
+      : {};
+    return { refId: item.refId, quantity: Number(item.quantity), unitCost: item.unitCost ?? product?.unitCost, remarks: item.remarks, ...extra };
   });
 }
 
-function nextNumber(def: DocumentDef) {
-  const numbers = getDb().documents.filter((doc) => doc.type === def.key).map((doc) => Number(doc.number.slice(-4)) || 0);
-  return `${def.prefix}-${new Date().getFullYear()}-${String(Math.max(100, ...numbers) + 1).padStart(4, "0")}`;
+function nextNumber(def: DocumentDef, fields: Record<string, unknown>) {
+  const prefix = documentPrefix(def, fields);
+  const numbers = getDb().documents.filter((doc) => doc.type === def.key && doc.number.startsWith(`${prefix}-`)).map((doc) => Number(doc.number.split("-").pop()) || 0);
+  return `${prefix}-${new Date().getFullYear()}-${String(Math.max(100, ...numbers) + 1).padStart(5, "0")}`;
 }
 
 function freshApprovals(def: DocumentDef, submitted: boolean) {
@@ -343,10 +347,11 @@ const documentRoutes: MockRoute[] = [
     method: "GET",
     pattern: "/documents/:type",
     handler: ({ params, query }) => {
-      docDef(params.type);
+      const def = docDef(params.type);
       const items = getDb()
         .documents.filter((doc) => doc.type === params.type)
-        .filter((doc) => !query.status || query.status === "all" || doc.status === query.status)
+        .filter((doc) => !query.status || query.status === "all" || doc.status === query.status || displayStatus(def, doc) === query.status)
+        .filter((doc) => def.fields.every((field) => !query[field.name] || (field.name === def.ui.typeField ? String(doc.fields[field.name] ?? "").startsWith(query[field.name]) : String(doc.fields[field.name] ?? "") === query[field.name])))
         .filter((doc) => (!query.from || doc.date >= query.from) && (!query.to || doc.date <= query.to))
         .map(enrichDocument)
         .filter((doc) => matchesSearch(query.search, [doc.number, doc.createdBy, doc.remarks, ...Object.values(doc.labels ?? {}), ...Object.values(doc.fields).map(String)]));
@@ -366,13 +371,14 @@ const documentRoutes: MockRoute[] = [
       const doc: TransactionDocument = {
         id: newId(def.prefix.toLowerCase()),
         type: def.key,
-        number: nextNumber(def),
+        number: nextNumber(def, body.fields ?? {}),
         date: body.date!,
         status: body.submit ? "pending" : "draft",
         fields: body.fields ?? {},
         items: normalizeItems(def, body.items ?? [], body.fields ?? {}),
         approvals: freshApprovals(def, Boolean(body.submit)),
         remarks: body.remarks,
+        attachments: body.attachments ?? [],
         createdBy: actorName(request.userId),
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -398,6 +404,7 @@ const documentRoutes: MockRoute[] = [
         fields: body.fields,
         items: normalizeItems(def, body.items ?? [], body.fields ?? {}),
         remarks: body.remarks,
+        attachments: body.attachments ?? doc.attachments ?? [],
         status: body.submit ? "pending" : "draft",
         approvals: freshApprovals(def, Boolean(body.submit)),
         updatedAt: nowISO(),

@@ -1,5 +1,5 @@
 import type { ListParams, Paginated } from "@/types/api";
-import type { DocumentItem, FieldValue, TransactionDocument } from "@/types/records";
+import type { DocumentAttachment, DocumentItem, FieldValue, TransactionDocument } from "@/types/records";
 import { cleanParams } from "@/lib/utils/query";
 import { baseApi } from "../baseApi";
 
@@ -8,6 +8,7 @@ export interface DocumentInput {
   fields: Record<string, FieldValue>;
   items: DocumentItem[];
   remarks?: string;
+  attachments?: DocumentAttachment[];
   /** true submits for approval; false saves a draft. */
   submit: boolean;
 }

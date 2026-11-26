@@ -30,10 +30,21 @@ export interface DocumentItem {
   countedQty?: number;
   condition?: string;
   remarks?: string;
+  /** Receiving (GRN): ordered / delivered / rejected quantities. `quantity` is the accepted quantity. */
+  poQty?: number;
+  receivedQty?: number;
+  rejectedQty?: number;
   /** Derived by the API */
   code?: string;
   description?: string;
   unit?: string;
+}
+
+/** File metadata attached to a document (the mock API keeps names and sizes only). */
+export interface DocumentAttachment {
+  name: string;
+  size: number;
+  type: string;
 }
 
 export interface TransactionDocument {
@@ -46,6 +57,7 @@ export interface TransactionDocument {
   items: DocumentItem[];
   approvals: ApprovalStep[];
   remarks?: string;
+  attachments?: DocumentAttachment[];
   createdBy: string;
   createdAt: string;
   updatedAt: string;
